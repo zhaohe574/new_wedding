@@ -102,6 +102,11 @@ class WorkbenchLogic extends BaseLogic
                 'image' => FileService::getFileUrl(config('project.default_image.menu_web')),
                 'url' => '/setting/website/information'
             ],
+            [
+                'name' => '婚庆业务配置',
+                'image' => FileService::getFileUrl(config('project.default_image.menu_web')),
+                'url' => '/wedding/service-business'
+            ],
         ];
     }
 

@@ -21,6 +21,7 @@ use app\common\model\decorate\DecoratePage;
 use app\common\model\decorate\DecorateTabbar;
 use app\common\service\ConfigService;
 use app\common\service\FileService;
+use app\common\service\ServiceBusinessConfigService;
 
 
 /**
@@ -150,6 +151,7 @@ class IndexLogic extends BaseLogic
             'style' => $style,
             'tabbar' => $tabbar,
             'login' => $loginConfig,
+            'serviceBusiness' => ServiceBusinessConfigService::getFrontendConfig(),
             'website' => $website,
             'webPage' => $webPage,
             'version'=> config('project.version'),

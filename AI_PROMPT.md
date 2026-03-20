@@ -173,5 +173,5 @@ LikeAdmin PHP is a rapid development framework featuring a separated front-end a
 - **UniApp**: `getToken()` from `@/utils/auth`.
 
 ## 9. Useful Links
-- **Official Docs**: https://doc.likeadmin.cn/
-- **PHP Docs**: https://doc.likeadmin.cn/php/
+- **Official Docs**: https://old-doc.likeadmin.cn/
+- **PHP Docs**: https://old-doc.likeadmin.cn/php/

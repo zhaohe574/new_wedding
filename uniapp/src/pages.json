@@ -155,6 +155,78 @@
             }
         },
         {
+            "path": "pages/provider_center/provider_center",
+            "style": {
+                "navigationBarTitleText": "服务人员中心"
+            },
+            "meta": {
+                "auth": true
+            }
+        },
+        {
+            "path": "pages/dashboard/dashboard",
+            "style": {
+                "navigationBarTitleText": "经营驾驶舱"
+            },
+            "meta": {
+                "auth": true
+            }
+        },
+        {
+            "path": "pages/wedding_profile/wedding_profile",
+            "style": {
+                "navigationBarTitleText": "婚礼基础档案"
+            },
+            "meta": {
+                "auth": true
+            }
+        },
+        {
+            "path": "pages/wedding_region/wedding_region",
+            "style": {
+                "navigationBarTitleText": "地区与档期"
+            },
+            "meta": {
+                "auth": true
+            }
+        },
+        {
+            "path": "pages/wedding_provider_list/wedding_provider_list",
+            "style": {
+                "navigationBarTitleText": "服务人员列表"
+            },
+            "meta": {
+                "auth": true
+            }
+        },
+        {
+            "path": "pages/wedding_provider_detail/wedding_provider_detail",
+            "style": {
+                "navigationBarTitleText": "服务人员详情"
+            },
+            "meta": {
+                "auth": true
+            }
+        },
+        {
+            "path": "pages/wedding_template_form/wedding_template_form",
+            "style": {
+                "navigationBarTitleText": "服务内容填写"
+            },
+            "meta": {
+                "auth": true
+            }
+        },
+        {
+            "path": "pages/wedding_order_preview/wedding_order_preview",
+            "style": {
+                "navigationBarTitleText": "订单预览"
+            },
+            "meta": {
+                "auth": true
+            }
+        },
+        {
             "path": "uni_modules/vk-uview-ui/components/u-avatar-cropper/u-avatar-cropper",
             "style": {
                 "navigationBarTitleText": "头像裁剪",

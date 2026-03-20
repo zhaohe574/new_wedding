@@ -14,6 +14,7 @@ export const useAppStore = defineStore({
     getters: {
         getWebsiteConfig: (state) => state.config.website || {},
         getLoginConfig: (state) => state.config.login || {},
+        getServiceBusinessConfig: (state) => state.config.serviceBusiness || {},
         getTabbarConfig: (state) => state.config.tabbar || [],
         getStyleConfig: (state) => state.config.style || {},
         getH5Config: (state) => state.config.webPage || {},

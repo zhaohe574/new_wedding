@@ -37,6 +37,13 @@
                     <view class="text-xs mt-[18rpx]" @click.stop="copy(user.account)">
                         账号：{{ user.account }}
                     </view>
+                    <view
+                        class="ability-tags mt-[18rpx]"
+                        v-if="user.can_enter_provider_center || user.can_view_dashboard"
+                    >
+                        <view class="ability-tag" v-if="user.can_enter_provider_center">服务人员中心</view>
+                        <view class="ability-tag ability-tag--gold" v-if="user.can_view_dashboard">驾驶舱权限</view>
+                    </view>
                 </view>
             </view>
             <navigator v-else class="flex items-center" hover-class="none" url="/pages/login/login">
@@ -90,9 +97,27 @@ const navigateTo = (url: string) => {
 <style lang="scss" scoped>
 .user-info {
     background: url(../../../static/images/user/my_topbg.png),
-        linear-gradient(90deg, $u-type-primary, $u-minor-color);
+        linear-gradient(135deg, #db2777, #f472b6 56%, #f5c46b);
     background-repeat: no-repeat;
     background-position: bottom;
     background-size: 100%;
+}
+
+.ability-tags {
+    display: flex;
+    gap: 12rpx;
+    flex-wrap: wrap;
+}
+
+.ability-tag {
+    padding: 8rpx 18rpx;
+    border-radius: 999rpx;
+    background: rgba(255, 255, 255, 0.18);
+    font-size: 20rpx;
+    line-height: 1.4;
+}
+
+.ability-tag--gold {
+    background: rgba(202, 138, 4, 0.22);
 }
 </style>

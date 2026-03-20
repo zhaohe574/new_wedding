@@ -18,3 +18,9 @@ bin-release/
 # information for Eclipse / Flash Builder.
 
 /.idea
+
+# Local generated caches
+__pycache__/
+*.pyc
+*.tsbuildinfo
+temp_test_patch.txt

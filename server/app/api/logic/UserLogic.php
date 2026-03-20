@@ -22,6 +22,7 @@ use app\common\{enum\notice\NoticeEnum,
     model\user\User,
     model\user\UserAuth,
     service\FileService,
+    service\ServiceBusinessConfigService,
     service\sms\SmsDriver,
     service\wechat\WeChatMnpService};
 use think\facade\Config;
@@ -56,8 +57,10 @@ class UserLogic extends BaseLogic
         }
 
         $user['has_password'] = !empty($user['password']);
-        $user->hidden(['password']);
-        return $user->toArray();
+        $user = $user->toArray();
+        $user = array_merge($user, ServiceBusinessConfigService::getUserAbility((int)$userInfo['user_id']));
+        unset($user['password']);
+        return $user;
     }
 
 

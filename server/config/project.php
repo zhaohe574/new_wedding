@@ -100,6 +100,38 @@ return [
     'decorate' => [
         // 底部导航栏样式设置
         'tabbar_style' => ['default_color' => '#999999', 'selected_color' => '#c455ff'],
-    ]
+    ],
+
+    // 婚庆业务基线配置
+    'service_business' => [
+        'trade' => [
+            'online_pay_enabled' => 1,
+            'offline_voucher_enabled' => 1,
+            'provider_confirm_timeout_minutes' => 30,
+            'pay_timeout_minutes' => 30,
+        ],
+        'review' => [
+            'provider_profile_review_mode' => 'admin',
+            'post_review_mode' => 'admin',
+            'comment_review_mode' => 'provider_then_admin',
+            'order_review_mode' => 'admin',
+        ],
+        'interaction' => [
+            'post_enabled' => 1,
+            'comment_enabled' => 1,
+            'order_review_enabled' => 1,
+        ],
+        'notice' => [
+            'system_notice_enabled' => 1,
+            'mnp_notice_enabled' => 1,
+            'work_wechat_notice_enabled' => 0,
+        ],
+        'display' => [
+            'provider_center_enabled' => 1,
+            'dashboard_enabled' => 1,
+            'wedding_profile_enabled' => 1,
+        ],
+        'dashboard_view_users' => [],
+    ],
 
 ];

@@ -11,6 +11,10 @@
 use think\facade\Console;
 use think\facade\Route;
 
+Route::get('api/wedding/provider/lists', 'api/Wedding/providerLists');
+Route::get('api/wedding/provider/detail', 'api/Wedding/providerDetail');
+Route::post('api/wedding/order/preview', 'api/Wedding/orderPreview');
+
 // 管理后台
 Route::rule('admin/:any', function () {
     return view(app()->getRootPath() . 'public/admin/index.html');
