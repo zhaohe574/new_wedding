@@ -103,6 +103,14 @@ const entryCards = computed(() => {
         cardClass: ''
     })
 
+    cards.push({
+        meta: 'My Orders',
+        title: '我的婚庆订单',
+        desc: '查看下单、接单、支付与凭证审核进度',
+        url: '/pages/wedding_order_list/wedding_order_list',
+        cardClass: ''
+    })
+
     if (userInfo.value?.can_enter_provider_center && Number(displayConfig.provider_center_enabled ?? 0) === 1) {
         cards.push({
             meta: 'Provider Center',

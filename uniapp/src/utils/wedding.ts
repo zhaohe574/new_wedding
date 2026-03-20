@@ -27,6 +27,7 @@ export function getWeddingOrderDraft(): Record<string, any> {
         category_id: Number(draft.category_id || 0),
         provider_id: Number(draft.provider_id || 0),
         package_id: Number(draft.package_id || 0),
+        payment_type: Number(draft.payment_type || 1),
         template_form_data: normalizeTemplateFormData(draft.template_form_data)
     }
 }
@@ -36,6 +37,7 @@ export function setWeddingOrderDraft(draft: Record<string, any>) {
         category_id: Number(draft.category_id || 0),
         provider_id: Number(draft.provider_id || 0),
         package_id: Number(draft.package_id || 0),
+        payment_type: Number(draft.payment_type || 1),
         template_form_data: normalizeTemplateFormData(draft.template_form_data)
     })
 }

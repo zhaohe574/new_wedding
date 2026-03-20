@@ -21,6 +21,8 @@ use app\common\enum\user\UserTerminalEnum;
 use app\common\logic\PayNotifyLogic;
 use app\common\model\recharge\RechargeOrder;
 use app\common\model\user\UserAuth;
+use app\common\model\wedding\ServiceOrder;
+use app\common\service\ServiceOrderService;
 use app\common\service\wechat\WeChatConfigService;
 use EasyWeChat\Pay\Application;
 use EasyWeChat\Pay\Message;
@@ -320,6 +322,7 @@ class WeChatPayService extends BasePayService
         $desc = [
             'order' => '商品',
             'recharge' => '充值',
+            ServiceOrderService::PAY_FROM => '婚庆服务预约',
         ];
         return $desc[$from] ?? '商品';
     }
@@ -382,6 +385,13 @@ class WeChatPayService extends BasePayService
                             return true;
                         }
                         PayNotifyLogic::handle('recharge', $message['out_trade_no'], $extra);
+                        break;
+                    case ServiceOrderService::PAY_FROM:
+                        $order = ServiceOrder::where(['sn' => $message['out_trade_no']])->whereNull('delete_time')->findOrEmpty();
+                        if ($order->isEmpty() || (int)$order['pay_status'] === PayEnum::ISPAID) {
+                            return true;
+                        }
+                        PayNotifyLogic::handle('serviceOrder', $message['out_trade_no'], $extra);
                         break;
                 }
             }

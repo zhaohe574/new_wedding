@@ -28,7 +28,8 @@ class PayValidate extends BaseValidate
     protected $rule = [
         'from'      => 'require',
         'pay_way'   => 'require|in:' . PayEnum::BALANCE_PAY . ',' . PayEnum::WECHAT_PAY . ',' . PayEnum::ALI_PAY,
-        'order_id'  => 'require'
+        'order_id'  => 'require',
+        'user_id'   => 'integer|gt:0',
     ];
 
 

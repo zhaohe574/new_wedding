@@ -20,8 +20,10 @@ use app\common\enum\YesNoEnum;
 use app\common\model\pay\PayWay;
 use app\common\model\recharge\RechargeOrder;
 use app\common\model\user\User;
+use app\common\model\wedding\ServiceOrder;
 use app\common\service\pay\AliPayService;
 use app\common\service\pay\WeChatPayService;
+use app\common\service\ServiceOrderService;
 
 
 /**
@@ -47,6 +49,17 @@ class PaymentLogic extends BaseLogic
             if ($params['from'] == 'recharge') {
                 // 充值
                 $order = RechargeOrder::findOrEmpty($params['order_id'])->toArray();
+            }
+            if ($params['from'] == ServiceOrderService::PAY_FROM) {
+                $order = ServiceOrder::where([
+                    'id' => (int)$params['order_id'],
+                    'user_id' => (int)($params['user_id'] ?? 0),
+                ])->whereNull('delete_time')->findOrEmpty();
+                if ($order->isEmpty()) {
+                    throw new \Exception('待支付订单不存在');
+                }
+                ServiceOrderService::getPayOrderInfo((int)$order['id']);
+                $order = $order->toArray();
             }
 
             if (empty($order)) {
@@ -74,7 +87,7 @@ class PaymentLogic extends BaseLogic
                     $item['extra'] = '可用余额:' . $user_money;
                 }
                 // 充值时去除余额支付
-                if ($params['from'] == 'recharge' && $item['pay_way'] == PayEnum::BALANCE_PAY) {
+                if (in_array($params['from'], ['recharge', ServiceOrderService::PAY_FROM], true) && $item['pay_way'] == PayEnum::BALANCE_PAY) {
                     unset($pay_way[$k]);
                 }
             }
@@ -107,6 +120,9 @@ class PaymentLogic extends BaseLogic
                 case 'recharge':
                     $order = RechargeOrder::where(['user_id' => $params['user_id'], 'id' => $params['order_id']])
                         ->findOrEmpty();
+                    if ($order->isEmpty()) {
+                        throw new \Exception('订单不存在');
+                    }
                     $payTime = empty($order['pay_time']) ? '' : date('Y-m-d H:i:s', $order['pay_time']);
                     $orderInfo = [
                         'order_id' => $order['id'],
@@ -117,9 +133,27 @@ class PaymentLogic extends BaseLogic
                         'pay_time' => $payTime,
                     ];
                     break;
+                case ServiceOrderService::PAY_FROM:
+                    $order = ServiceOrder::where([
+                        'user_id' => $params['user_id'],
+                        'id' => $params['order_id'],
+                    ])->whereNull('delete_time')->findOrEmpty();
+                    if ($order->isEmpty()) {
+                        throw new \Exception('订单不存在');
+                    }
+                    $payTime = empty($order['pay_time']) ? '' : date('Y-m-d H:i:s', (int)$order['pay_time']);
+                    $orderInfo = [
+                        'order_id' => $order['id'],
+                        'order_sn' => $order['sn'],
+                        'order_amount' => $order['order_amount'],
+                        'pay_way' => PayEnum::getPayDesc((int)$order['pay_way']),
+                        'pay_status' => PayEnum::getPayStatusDesc((int)$order['pay_status']),
+                        'pay_time' => $payTime,
+                    ];
+                    break;
             }
 
-            if (empty($order)) {
+            if (empty($orderInfo)) {
                 throw new \Exception('订单不存在');
             }
 
@@ -151,6 +185,16 @@ class PaymentLogic extends BaseLogic
                     if ($order->isEmpty()) {
                         throw new \Exception('充值订单不存在');
                     }
+                    break;
+                case ServiceOrderService::PAY_FROM:
+                    $order = ServiceOrder::where([
+                        'id' => $params['order_id'],
+                        'user_id' => $params['user_id'],
+                    ])->whereNull('delete_time')->findOrEmpty();
+                    if ($order->isEmpty()) {
+                        throw new \Exception('订单不存在');
+                    }
+                    ServiceOrderService::getPayOrderInfo((int)$order['id']);
                     break;
             }
 
@@ -189,10 +233,15 @@ class PaymentLogic extends BaseLogic
             case 'recharge':
                 RechargeOrder::update(['pay_way' => $payWay, 'pay_sn' => $paySn], ['id' => $order['id']]);
                 break;
+            case ServiceOrderService::PAY_FROM:
+                ServiceOrder::update(['pay_way' => $payWay, 'pay_sn' => $paySn], ['id' => $order['id']]);
+                break;
         }
 
         if ($order['order_amount'] == 0) {
-            PayNotifyLogic::handle($from, $order['sn']);
+            // from 参数可能是 service_order，这里统一映射到回调逻辑的方法名
+            $notifyAction = $from === ServiceOrderService::PAY_FROM ? 'serviceOrder' : $from;
+            PayNotifyLogic::handle($notifyAction, $order['sn'], ['pay_way' => $payWay]);
             return ['pay_way' => PayEnum::BALANCE_PAY];
         }
 

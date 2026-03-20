@@ -65,7 +65,11 @@ router.beforeEach(async (to) => {
     }
 
     const path = to.path || ''
-    const needProviderCenter = path.includes('/pages/provider_center/provider_center')
+    const needProviderCenter = [
+        '/pages/provider_center/provider_center',
+        '/pages/provider_order_pending/provider_order_pending',
+        '/pages/provider_order_detail/provider_order_detail'
+    ].some((item) => path.includes(item))
     const needDashboard = path.includes('/pages/dashboard/dashboard')
     const needWeddingProfile = path.includes('/pages/wedding_profile/wedding_profile')
 

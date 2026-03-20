@@ -14,6 +14,15 @@ use think\facade\Route;
 Route::get('api/wedding/provider/lists', 'api/Wedding/providerLists');
 Route::get('api/wedding/provider/detail', 'api/Wedding/providerDetail');
 Route::post('api/wedding/order/preview', 'api/Wedding/orderPreview');
+Route::post('api/wedding/order/create', 'api/Wedding/orderCreate');
+Route::get('api/wedding/order/lists', 'api/Wedding/orderLists');
+Route::get('api/wedding/order/detail', 'api/Wedding/orderDetail');
+Route::post('api/wedding/order/cancel', 'api/Wedding/orderCancel');
+Route::post('api/wedding/order/offlineVoucher', 'api/Wedding/orderOfflineVoucher');
+Route::get('api/wedding/provider/order/pendingLists', 'api/Wedding/providerOrderPendingLists');
+Route::get('api/wedding/provider/order/detail', 'api/Wedding/providerOrderDetail');
+Route::post('api/wedding/provider/order/accept', 'api/Wedding/providerOrderAccept');
+Route::post('api/wedding/provider/order/reject', 'api/Wedding/providerOrderReject');
 
 // 管理后台
 Route::rule('admin/:any', function () {

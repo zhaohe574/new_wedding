@@ -18,6 +18,7 @@ use app\common\enum\PayEnum;
 use app\common\enum\user\AccountLogEnum;
 use app\common\model\recharge\RechargeOrder;
 use app\common\model\user\User;
+use app\common\service\ServiceOrderService;
 use think\facade\Db;
 use think\facade\Log;
 
@@ -82,6 +83,18 @@ class PayNotifyLogic extends BaseLogic
         $order->pay_status = PayEnum::ISPAID;
         $order->pay_time = time();
         $order->save();
+    }
+
+    /**
+     * @notes 婚庆服务订单支付回调
+     * @param string $orderSn
+     * @param array $extra
+     * @return void
+     */
+    public static function serviceOrder(string $orderSn, array $extra = []): void
+    {
+        $payWay = isset($extra['pay_way']) ? (int)$extra['pay_way'] : PayEnum::WECHAT_PAY;
+        ServiceOrderService::handlePaySuccess($orderSn, $extra, $payWay);
     }
 
 

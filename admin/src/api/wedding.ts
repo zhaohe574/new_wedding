@@ -203,3 +203,15 @@ export function updateServiceContentTemplateStatus(params: any) {
 export function getServiceContentTemplateCategoryOptions() {
     return request.get({ url: '/wedding.service_content_template/categoryOptions' })
 }
+
+export function getServiceOrderLists(params?: any) {
+    return request.get({ url: '/wedding.service_order/lists', params })
+}
+
+export function detailServiceOrder(params: any) {
+    return request.get({ url: '/wedding.service_order/detail', params })
+}
+
+export function offlineVoucherAuditServiceOrder(params: any) {
+    return request.post({ url: '/wedding.service_order/offlineVoucherAudit', params })
+}

@@ -227,6 +227,42 @@
             }
         },
         {
+            "path": "pages/wedding_order_list/wedding_order_list",
+            "style": {
+                "navigationBarTitleText": "我的婚庆订单"
+            },
+            "meta": {
+                "auth": true
+            }
+        },
+        {
+            "path": "pages/wedding_order_detail/wedding_order_detail",
+            "style": {
+                "navigationBarTitleText": "婚庆订单详情"
+            },
+            "meta": {
+                "auth": true
+            }
+        },
+        {
+            "path": "pages/provider_order_pending/provider_order_pending",
+            "style": {
+                "navigationBarTitleText": "待确认订单"
+            },
+            "meta": {
+                "auth": true
+            }
+        },
+        {
+            "path": "pages/provider_order_detail/provider_order_detail",
+            "style": {
+                "navigationBarTitleText": "订单处理"
+            },
+            "meta": {
+                "auth": true
+            }
+        },
+        {
             "path": "uni_modules/vk-uview-ui/components/u-avatar-cropper/u-avatar-cropper",
             "style": {
                 "navigationBarTitleText": "头像裁剪",

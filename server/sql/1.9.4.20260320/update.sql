@@ -200,6 +200,100 @@ CREATE TABLE IF NOT EXISTS `la_service_content_template_field` (
   INDEX `idx_delete_time` (`delete_time`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='婚庆服务内容模板字段表';
 
+CREATE TABLE IF NOT EXISTS `la_service_order` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `sn` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '订单编号',
+  `user_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '用户ID',
+  `provider_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '服务人员ID',
+  `package_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '套餐ID',
+  `category_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '服务分类ID',
+  `provider_name` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '服务人员名称快照',
+  `package_name` varchar(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '套餐名称快照',
+  `service_date` date NOT NULL COMMENT '服务日期',
+  `province_code` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '省编码',
+  `province_name` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '省名称',
+  `city_code` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '市编码',
+  `city_name` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '市名称',
+  `district_code` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '区县编码',
+  `district_name` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '区县名称',
+  `price_match_level` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '价格命中层级',
+  `matched_region_code` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '命中地区编码',
+  `matched_region_name` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '命中地区名称',
+  `order_amount` decimal(10,2) NOT NULL DEFAULT 0.00 COMMENT '订单金额',
+  `payment_type` tinyint(1) UNSIGNED NOT NULL DEFAULT 1 COMMENT '支付方式 1-在线支付 2-线下凭证',
+  `order_status` tinyint(3) UNSIGNED NOT NULL DEFAULT 10 COMMENT '订单状态',
+  `pay_way` tinyint(3) UNSIGNED NOT NULL DEFAULT 0 COMMENT '在线支付方式',
+  `pay_status` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '支付状态 0-未支付 1-已支付',
+  `pay_sn` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '支付单号',
+  `provider_confirm_expire_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '待确认超时时间',
+  `pay_expire_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '待支付超时时间',
+  `provider_confirm_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '服务人员确认时间',
+  `provider_reject_reason` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '拒单原因',
+  `cancel_source` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '取消来源',
+  `cancel_reason` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '取消原因',
+  `order_terminal` tinyint(3) UNSIGNED NOT NULL DEFAULT 0 COMMENT '下单终端',
+  `pay_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '支付时间',
+  `transaction_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '第三方流水号',
+  `create_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '创建时间',
+  `update_time` int(10) UNSIGNED DEFAULT NULL COMMENT '更新时间',
+  `delete_time` int(10) DEFAULT NULL COMMENT '删除时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `idx_sn` (`sn`) USING BTREE,
+  INDEX `idx_user_status_date` (`user_id`, `order_status`, `service_date`) USING BTREE,
+  INDEX `idx_provider_status_date` (`provider_id`, `order_status`, `service_date`) USING BTREE,
+  INDEX `idx_service_date` (`service_date`) USING BTREE,
+  INDEX `idx_pay_status` (`pay_status`) USING BTREE,
+  INDEX `idx_delete_time` (`delete_time`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='婚庆服务订单表';
+
+CREATE TABLE IF NOT EXISTS `la_service_order_snapshot` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `order_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '订单ID',
+  `service_date` date NOT NULL COMMENT '服务日期',
+  `province_code` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '省编码',
+  `province_name` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '省名称',
+  `city_code` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '市编码',
+  `city_name` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '市名称',
+  `district_code` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '区县编码',
+  `district_name` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '区县名称',
+  `price` decimal(10,2) NOT NULL DEFAULT 0.00 COMMENT '最终价格',
+  `price_match_level` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '价格命中层级',
+  `matched_region_code` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '命中地区编码',
+  `matched_region_name` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '命中地区名称',
+  `provider_snapshot` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '服务人员快照JSON',
+  `package_snapshot` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '套餐快照JSON',
+  `profile_snapshot` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '婚礼档案快照JSON',
+  `template_snapshot` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '模板填写快照JSON',
+  `create_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '创建时间',
+  `update_time` int(10) UNSIGNED DEFAULT NULL COMMENT '更新时间',
+  `delete_time` int(10) DEFAULT NULL COMMENT '删除时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `idx_order_id` (`order_id`) USING BTREE,
+  INDEX `idx_service_date` (`service_date`) USING BTREE,
+  INDEX `idx_delete_time` (`delete_time`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='婚庆服务订单快照表';
+
+CREATE TABLE IF NOT EXISTS `la_service_order_offline_voucher` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `order_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '订单ID',
+  `user_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '用户ID',
+  `provider_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '服务人员ID',
+  `voucher_images` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '凭证图片JSON',
+  `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '提交说明',
+  `audit_status` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '审核状态 0-待审核 1-通过 2-驳回',
+  `audit_by` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '审核人',
+  `audit_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '审核时间',
+  `audit_remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '审核说明',
+  `create_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '创建时间',
+  `update_time` int(10) UNSIGNED DEFAULT NULL COMMENT '更新时间',
+  `delete_time` int(10) DEFAULT NULL COMMENT '删除时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `idx_order_id` (`order_id`) USING BTREE,
+  INDEX `idx_audit_status` (`audit_status`) USING BTREE,
+  INDEX `idx_provider_id` (`provider_id`) USING BTREE,
+  INDEX `idx_delete_time` (`delete_time`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='婚庆线下支付凭证表';
+
 INSERT INTO `la_config` (`type`, `name`, `value`, `create_time`, `update_time`)
 SELECT 'service_business', 'trade', '{"online_pay_enabled":1,"offline_voucher_enabled":1,"provider_confirm_timeout_minutes":30,"pay_timeout_minutes":30}', 1773945600, 1773945600
 WHERE NOT EXISTS (
@@ -292,5 +386,15 @@ REPLACE INTO `la_system_menu` (`id`, `pid`, `type`, `name`, `icon`, `sort`, `per
 (231, 227, 'A', '模板详情', '', 70, 'wedding.service_content_template/detail', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
 (232, 227, 'A', '模板状态', '', 60, 'wedding.service_content_template/updateStatus', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
 (233, 227, 'A', '模板分类选项', '', 50, 'wedding.service_content_template/categoryOptions', '', '', '', '', 0, 1, 0, 1773945600, 1773945600);
+
+REPLACE INTO `la_system_menu` (`id`, `pid`, `type`, `name`, `icon`, `sort`, `perms`, `paths`, `component`, `selected`, `params`, `is_cache`, `is_show`, `is_disable`, `create_time`, `update_time`) VALUES
+(234, 179, 'C', '订单管理', '', 35, 'wedding.service_order/lists', 'service-order', 'wedding/service-order/index', '', '', 0, 1, 0, 1773945600, 1773945600),
+(235, 234, 'A', '订单列表', '', 100, 'wedding.service_order/lists', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
+(236, 234, 'A', '订单详情', '', 90, 'wedding.service_order/detail', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
+(237, 234, 'A', '凭证审核', '', 80, 'wedding.service_order/offlineVoucherAudit', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
+(238, 179, 'C', '线下凭证审核', '', 34, 'wedding.service_order/lists', 'service-order-voucher', 'wedding/service-order-voucher/index', '', '', 0, 1, 0, 1773945600, 1773945600),
+(239, 238, 'A', '凭证列表', '', 100, 'wedding.service_order/lists', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
+(240, 238, 'A', '凭证详情', '', 90, 'wedding.service_order/detail', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
+(241, 238, 'A', '凭证审核', '', 80, 'wedding.service_order/offlineVoucherAudit', '', '', '', '', 0, 1, 0, 1773945600, 1773945600);
 
 SET FOREIGN_KEY_CHECKS=1;

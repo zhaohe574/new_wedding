@@ -37,6 +37,20 @@
                 </view>
             </view>
         </view>
+
+        <view class="panel-card mt-[24rpx]">
+            <view class="panel-card__title">快捷入口</view>
+            <view class="entry-grid">
+                <view class="entry-item" @click="navigateTo('/pages/provider_order_pending/provider_order_pending')">
+                    <view class="entry-item__title">待确认订单</view>
+                    <view class="entry-item__desc">查看并处理服务人员待确认订单</view>
+                </view>
+                <view class="entry-item" @click="navigateTo('/pages/wedding_order_list/wedding_order_list')">
+                    <view class="entry-item__title">用户订单视角</view>
+                    <view class="entry-item__desc">快速核对用户侧订单状态展示</view>
+                </view>
+            </view>
+        </view>
     </view>
 </template>
 
@@ -113,6 +127,12 @@ const capabilityList = computed(() => {
         }
     ]
 })
+
+const navigateTo = (url: string) => {
+    uni.navigateTo({
+        url
+    })
+}
 </script>
 
 <style lang="scss" scoped>
@@ -228,6 +248,32 @@ const capabilityList = computed(() => {
 
 .capability-item__desc {
     margin-top: 12rpx;
+    color: #6b7280;
+    font-size: 24rpx;
+    line-height: 1.7;
+}
+
+.entry-grid {
+    margin-top: 22rpx;
+    display: grid;
+    gap: 16rpx;
+}
+
+.entry-item {
+    padding: 22rpx;
+    border-radius: 22rpx;
+    border: 1rpx solid rgba(202, 138, 4, 0.14);
+    background: linear-gradient(180deg, #fff9fb, #fffdf9);
+}
+
+.entry-item__title {
+    color: #1f2937;
+    font-size: 28rpx;
+    font-weight: 600;
+}
+
+.entry-item__desc {
+    margin-top: 10rpx;
     color: #6b7280;
     font-size: 24rpx;
     line-height: 1.7;

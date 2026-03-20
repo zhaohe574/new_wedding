@@ -39,7 +39,7 @@ class PayController extends BaseApiController
      */
     public function payWay()
     {
-        $params = (new PayValidate())->goCheck('payway');
+        $params = (new PayValidate())->goCheck('payway', ['user_id' => $this->userId]);
         $result = PaymentLogic::getPayWay($this->userId, $this->userInfo['terminal'], $params);
         if ($result === false) {
             return $this->fail(PaymentLogic::getError());
@@ -56,7 +56,7 @@ class PayController extends BaseApiController
      */
     public function prepay()
     {
-        $params = (new PayValidate())->post()->goCheck();
+        $params = (new PayValidate())->post()->goCheck(null, ['user_id' => $this->userId]);
         //订单信息
         $order = PaymentLogic::getPayOrderInfo($params);
         if (false === $order) {

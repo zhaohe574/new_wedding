@@ -7,7 +7,7 @@
             <view class="hero-card__eyebrow">Order Preview</view>
             <view class="hero-card__title">订单预览</view>
             <view class="hero-card__desc">
-                当前价格与命中层级全部来自服务端重算结果。本批仅提供只读预览，不执行真实创建订单。
+                当前价格与命中层级全部来自服务端重算结果。确认后将创建真实订单并进入待服务人员确认流程。
             </view>
         </view>
 
@@ -96,20 +96,44 @@
                 </view>
             </view>
 
-            <view class="footer-note mt-[24rpx]">
-                当前仅开放订单预览，创建订单、锁档写库与订单快照持久化将在下一批接入。
+            <view class="panel-card mt-[24rpx]">
+                <view class="panel-card__title">支付方式</view>
+                <view class="payment-type-grid">
+                    <view
+                        v-for="item in paymentOptions"
+                        :key="item.value"
+                        class="payment-type-card"
+                        :class="{
+                            'payment-type-card--active': paymentType === item.value,
+                            'payment-type-card--disabled': item.disabled
+                        }"
+                        @click="handleSelectPaymentType(item)"
+                    >
+                        <view class="payment-type-card__title">{{ item.label }}</view>
+                        <view class="payment-type-card__desc">{{ item.desc }}</view>
+                    </view>
+                </view>
             </view>
+
+            <view class="footer-note mt-[24rpx]">
+                下单后将立即锁档并进入“待服务人员确认”。服务人员确认后，按本页选择的支付方式继续完成支付流程。
+            </view>
+            <button class="action-btn mt-[20rpx]" :loading="creating" @click="handleCreateOrder">提交订单</button>
         </template>
     </view>
 </template>
 
 <script setup lang="ts">
-import { previewWeddingOrder } from '@/api/wedding'
-import { getSelectedRegion, getSelectedServiceDate, getWeddingOrderDraft } from '@/utils/wedding'
+import { createWeddingOrder, previewWeddingOrder } from '@/api/wedding'
+import { getSelectedRegion, getSelectedServiceDate, getWeddingOrderDraft, patchWeddingOrderDraft } from '@/utils/wedding'
+import { useAppStore } from '@/stores/app'
 import { onLoad } from '@dcloudio/uni-app'
 import { computed, reactive, ref } from 'vue'
 
 const loading = ref(false)
+const creating = ref(false)
+const paymentType = ref(1)
+const appStore = useAppStore()
 const preview = reactive<any>({
     provider: {},
     package: {},
@@ -134,6 +158,32 @@ const getMatchLevelText = (value: string) => {
         province: '省级命中'
     }
     return map[value] || '-'
+}
+
+const paymentOptions = computed(() => {
+    const trade = appStore.getServiceBusinessConfig?.trade || {}
+    return [
+        {
+            value: 1,
+            label: '在线支付',
+            desc: '服务人员确认后直接拉起支付',
+            disabled: Number(trade.online_pay_enabled ?? 0) !== 1
+        },
+        {
+            value: 2,
+            label: '线下凭证',
+            desc: '服务人员确认后上传线下支付凭证',
+            disabled: Number(trade.offline_voucher_enabled ?? 0) !== 1
+        }
+    ]
+})
+
+const handleSelectPaymentType = (item: { value: number; disabled: boolean }) => {
+    if (item.disabled) {
+        uni.showToast({ title: '该支付方式当前未开放', icon: 'none' })
+        return
+    }
+    paymentType.value = item.value
 }
 
 const redirectBack = () => {
@@ -172,6 +222,8 @@ const loadPreview = async () => {
             template_form_data: draft.template_form_data
         })
         Object.assign(preview, data || {})
+        const draft = getWeddingOrderDraft()
+        paymentType.value = [1, 2].includes(Number(draft.payment_type || 0)) ? Number(draft.payment_type) : 1
     } catch (error) {
         setTimeout(() => {
             redirectBack()
@@ -181,7 +233,39 @@ const loadPreview = async () => {
     }
 }
 
+const handleCreateOrder = async () => {
+    if (!preview.preview_payload) {
+        uni.showToast({ title: '预览数据异常，请返回重试', icon: 'none' })
+        return
+    }
+    const selectedOption = paymentOptions.value.find((item) => item.value === paymentType.value)
+    if (!selectedOption || selectedOption.disabled) {
+        uni.showToast({ title: '请选择可用的支付方式', icon: 'none' })
+        return
+    }
+
+    creating.value = true
+    try {
+        const payload = {
+            ...preview.preview_payload,
+            payment_type: paymentType.value
+        }
+        const data = await createWeddingOrder(payload)
+        patchWeddingOrderDraft({
+            payment_type: paymentType.value
+        })
+        uni.redirectTo({
+            url: `/pages/wedding_order_detail/wedding_order_detail?order_id=${data.order_id}`
+        })
+    } finally {
+        creating.value = false
+    }
+}
+
 onLoad(async () => {
+    if (!Object.keys(appStore.getServiceBusinessConfig || {}).length) {
+        await appStore.getConfig()
+    }
     await loadPreview()
 })
 </script>
@@ -317,5 +401,50 @@ onLoad(async () => {
     border-radius: 22rpx;
     border: 1rpx dashed rgba(202, 138, 4, 0.22);
     background: rgba(255, 255, 255, 0.84);
+}
+
+.payment-type-grid {
+    display: grid;
+    gap: 16rpx;
+    margin-top: 20rpx;
+}
+
+.payment-type-card {
+    padding: 22rpx;
+    border-radius: 22rpx;
+    border: 1rpx solid rgba(219, 39, 119, 0.14);
+    background: linear-gradient(180deg, #fff9fb, #fffdf9);
+}
+
+.payment-type-card--active {
+    border-color: rgba(202, 138, 4, 0.36);
+    box-shadow: 0 16rpx 30rpx rgba(202, 138, 4, 0.12);
+}
+
+.payment-type-card--disabled {
+    opacity: 0.45;
+}
+
+.payment-type-card__title {
+    color: #111827;
+    font-size: 28rpx;
+    font-weight: 600;
+}
+
+.payment-type-card__desc {
+    margin-top: 10rpx;
+    color: #6b7280;
+    font-size: 22rpx;
+    line-height: 1.7;
+}
+
+.action-btn {
+    width: 100%;
+    border-radius: 999rpx;
+    background: linear-gradient(135deg, #db2777, #ca8a04);
+    color: #ffffff;
+    font-size: 28rpx;
+    font-weight: 600;
+    box-shadow: 0 20rpx 40rpx rgba(219, 39, 119, 0.18);
 }
 </style>

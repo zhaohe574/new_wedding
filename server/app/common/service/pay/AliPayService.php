@@ -21,6 +21,8 @@ use app\common\logic\PayNotifyLogic;
 use app\common\model\member\MemberOrder;
 use app\common\model\pay\PayConfig;
 use app\common\model\recharge\RechargeOrder;
+use app\common\model\wedding\ServiceOrder;
+use app\common\service\ServiceOrderService;
 use think\facade\Log;
 
 /**
@@ -181,6 +183,13 @@ class AliPayService extends BasePayService
                         return true;
                     }
                     PayNotifyLogic::handle('recharge', $data['out_trade_no'], $extra);
+                    break;
+                case ServiceOrderService::PAY_FROM:
+                    $order = ServiceOrder::where(['sn' => $data['out_trade_no']])->whereNull('delete_time')->findOrEmpty();
+                    if ($order->isEmpty() || (int)$order['pay_status'] === PayEnum::ISPAID) {
+                        return true;
+                    }
+                    ServiceOrderService::handlePaySuccess($data['out_trade_no'], $extra, PayEnum::ALI_PAY);
                     break;
             }
 
@@ -369,4 +378,3 @@ class AliPayService extends BasePayService
         return $result['alipay_fund_trans_common_query_response'] ?? [];
     }
 }
-

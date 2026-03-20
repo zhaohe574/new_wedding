@@ -58,13 +58,13 @@
                 <view class="mt-[40rpx]">
                     <view class="mb-[20rpx]">
                         <u-button
-                            v-if="pageOptions.from == 'recharge'"
+                            v-if="pageOptions.from == 'recharge' || pageOptions.from == 'service_order'"
                             type="primary"
                             shape="circle"
                             hover-class="none"
                             @click="goOrder"
                         >
-                            继续充值
+                            {{ pageOptions.from == 'recharge' ? '继续充值' : '查看订单' }}
                         </u-button>
                     </view>
                     <view class="mb-[20rpx]">
@@ -140,6 +140,11 @@ const goOrder = () => {
     switch (pageOptions.value.from) {
         case 'recharge':
             router.navigateBack()
+            break
+        case 'service_order':
+            uni.redirectTo({
+                url: `/pages/wedding_order_detail/wedding_order_detail?order_id=${pageOptions.value.id}`
+            })
             break
     }
 }
