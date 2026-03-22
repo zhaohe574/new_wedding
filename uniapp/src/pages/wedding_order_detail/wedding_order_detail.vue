@@ -2,13 +2,14 @@
     <page-meta :page-style="$theme.pageStyle">
         <navigation-bar :front-color="$theme.navColor" :background-color="$theme.navBgColor" />
     </page-meta>
+    <w-page-nav />
     <view class="wedding-order-detail-page min-h-screen px-[24rpx] py-[24rpx] box-border">
         <view v-if="loading" class="state-card">正在加载订单详情...</view>
         <template v-else>
             <view class="hero-card">
                 <view class="hero-card__eyebrow">Order Detail</view>
                 <view class="hero-card__title">订单状态：{{ detail.order.order_status_desc || '-' }}</view>
-                <view class="hero-card__desc">订单号：{{ detail.order.sn || '-' }}</view>
+                <view class="hero-card__meta">订单号：{{ detail.order.sn || '-' }}</view>
             </view>
 
             <view class="panel-card mt-[24rpx]">
@@ -46,7 +47,7 @@
 
             <view class="panel-card mt-[24rpx]">
                 <view class="panel-card__title">最近改期申请</view>
-                <view v-if="!detail.latest_change?.id" class="panel-card__desc">当前暂无改期记录。</view>
+                <view v-if="!detail.latest_change?.id" class="panel-card__meta">当前暂无改期记录。</view>
                 <template v-else>
                     <view class="detail-list">
                         <view class="detail-row">
@@ -75,7 +76,7 @@
 
             <view class="panel-card mt-[24rpx]">
                 <view class="panel-card__title">退款进度</view>
-                <view v-if="!detail.latest_refund?.id" class="panel-card__desc">当前暂无退款记录。</view>
+                <view v-if="!detail.latest_refund?.id" class="panel-card__meta">当前暂无退款记录。</view>
                 <template v-else>
                     <view class="detail-list">
                         <view class="detail-row">
@@ -100,7 +101,7 @@
 
             <view class="panel-card mt-[24rpx]">
                 <view class="panel-card__title">订单评价</view>
-                <view v-if="!detail.review?.id" class="panel-card__desc">当前暂未提交评价。</view>
+                <view v-if="!detail.review?.id" class="panel-card__meta">当前暂未提交评价。</view>
                 <template v-else>
                     <view class="detail-list">
                         <view class="detail-row">
@@ -134,11 +135,10 @@
 
             <view class="panel-card mt-[24rpx]">
                 <view class="panel-card__title">服务内容快照</view>
-                <view v-if="!templatePages.length" class="panel-card__desc">暂无模板快照信息。</view>
+                <view v-if="!templatePages.length" class="panel-card__meta">暂无模板快照信息。</view>
                 <view v-else class="template-page-list">
                     <view v-for="(page, pageIndex) in templatePages" :key="pageIndex" class="template-page-card">
                         <view class="template-page-card__title">{{ page.title || `第 ${pageIndex + 1} 页` }}</view>
-                        <view v-if="page.description" class="template-page-card__desc">{{ page.description }}</view>
                         <view class="detail-list">
                             <view v-for="field in page.fields || []" :key="field.field_key" class="detail-row">
                                 <view class="detail-row__label">{{ field.label }}</view>
@@ -151,7 +151,7 @@
 
             <view class="panel-card mt-[24rpx]">
                 <view class="panel-card__title">线下凭证</view>
-                <view v-if="!detail.offline_voucher.id" class="panel-card__desc">当前暂无线下凭证记录。</view>
+                <view v-if="!detail.offline_voucher.id" class="panel-card__meta">当前暂无线下凭证记录。</view>
                 <template v-else>
                     <view class="detail-list">
                         <view class="detail-row">
@@ -266,7 +266,12 @@ import {
     submitWeddingOfflineVoucher
 } from '@/api/wedding'
 import { useUserStore } from '@/stores/user'
-import { requestWeddingSubscribeMessages } from '@/utils/wedding'
+import {
+    BUYER_REFUND_SUBSCRIBE_SCENES,
+    BUYER_RESCHEDULE_SUBSCRIBE_SCENES,
+    mergeWeddingSubscribeScenes,
+    requestWeddingSubscribeMessages
+} from '@/utils/wedding'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import { computed, reactive, ref } from 'vue'
 
@@ -408,7 +413,7 @@ const handleSubmitReschedule = async () => {
     }
     rescheduleSubmitting.value = true
     try {
-        await requestWeddingSubscribeMessages([209])
+        await requestWeddingSubscribeMessages(mergeWeddingSubscribeScenes(BUYER_RESCHEDULE_SUBSCRIBE_SCENES))
         await applyWeddingOrderReschedule({
             order_id: orderId.value,
             new_service_date: rescheduleForm.new_service_date,
@@ -428,7 +433,7 @@ const handleSubmitRefund = async () => {
     }
     refundSubmitting.value = true
     try {
-        await requestWeddingSubscribeMessages([214])
+        await requestWeddingSubscribeMessages(mergeWeddingSubscribeScenes(BUYER_REFUND_SUBSCRIBE_SCENES))
         await applyWeddingOrderRefund({
             order_id: orderId.value,
             apply_reason: refundForm.apply_reason
@@ -518,8 +523,8 @@ onShow(async () => {
     font-weight: 600;
 }
 
-.hero-card__desc,
-.panel-card__desc,
+.hero-card__meta,
+.panel-card__meta,
 .state-card,
 .popup-panel__desc {
     margin-top: 16rpx;
@@ -575,12 +580,6 @@ onShow(async () => {
 
 .template-page-card {
     padding: 20rpx;
-}
-
-.template-page-card__desc {
-    margin-top: 8rpx;
-    color: #6b7280;
-    font-size: 22rpx;
 }
 
 .voucher-grid,

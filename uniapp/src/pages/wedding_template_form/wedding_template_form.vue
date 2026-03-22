@@ -2,13 +2,11 @@
     <page-meta :page-style="$theme.pageStyle">
         <navigation-bar :front-color="$theme.navColor" :background-color="$theme.navBgColor" />
     </page-meta>
+    <w-page-nav />
     <view class="wedding-template-form-page min-h-screen px-[24rpx] py-[24rpx] box-border">
         <view class="hero-card">
             <view class="hero-card__eyebrow">Template Form</view>
             <view class="hero-card__title">服务内容填写</view>
-            <view class="hero-card__desc">
-                模板来自服务分类配置，婚礼档案会作为默认值来源之一。进入预览前会执行全量必填校验。
-            </view>
             <view class="hero-card__meta">{{ selectionSummary }}</view>
         </view>
 
@@ -27,7 +25,6 @@
 
             <view class="panel-card mt-[24rpx]">
                 <view class="panel-card__title">{{ currentPage.title }}</view>
-                <view v-if="currentPage.description" class="panel-card__desc">{{ currentPage.description }}</view>
 
                 <view class="field-list">
                     <view v-for="field in currentPage.fields || []" :key="field.field_key" class="field-item">
@@ -86,13 +83,20 @@
 
 <script setup lang="ts">
 import { getWeddingProfile, getWeddingTemplate } from '@/api/wedding'
-import { buildWeddingSelectionSummary, getWeddingOrderDraft, patchWeddingOrderDraft } from '@/utils/wedding'
+import {
+    buildWeddingSelectionSummary,
+    buildWeddingTradeQueryUrl,
+    getWeddingOrderDraft,
+    normalizeWeddingTradeQuery,
+    patchWeddingOrderDraft,
+    type WeddingTradeQuery
+} from '@/utils/wedding'
 import { onLoad } from '@dcloudio/uni-app'
 import { computed, reactive, ref } from 'vue'
 
 const loading = ref(false)
 const activePageIndex = ref(0)
-const selectionSummary = ref('')
+const tradeQuery = ref<WeddingTradeQuery>(normalizeWeddingTradeQuery())
 const template = reactive<any>({
     id: 0,
     name: '',
@@ -100,6 +104,7 @@ const template = reactive<any>({
 })
 const formData = reactive<Record<string, any>>({})
 
+const selectionSummary = computed(() => buildWeddingSelectionSummary(tradeQuery.value))
 const currentPage = computed(() => template.pages[activePageIndex.value] || { fields: [], title: '' })
 const isLastPage = computed(() => activePageIndex.value >= template.pages.length - 1)
 
@@ -269,7 +274,7 @@ const handleGoPreview = () => {
         template_form_data: { ...formData }
     })
     uni.navigateTo({
-        url: '/pages/wedding_order_preview/wedding_order_preview'
+        url: buildWeddingTradeQueryUrl('/pages/wedding_order_preview/wedding_order_preview', tradeQuery.value)
     })
 }
 
@@ -279,7 +284,7 @@ const loadData = async () => {
         uni.showToast({ title: '请先完成服务人员和套餐选择', icon: 'none' })
         setTimeout(() => {
             uni.redirectTo({
-                url: '/pages/wedding_provider_list/wedding_provider_list'
+                url: buildWeddingTradeQueryUrl('/pages/wedding_provider_list/wedding_provider_list', tradeQuery.value)
             })
         }, 180)
         return
@@ -302,8 +307,8 @@ const loadData = async () => {
     }
 }
 
-onLoad(async () => {
-    selectionSummary.value = buildWeddingSelectionSummary()
+onLoad(async (options) => {
+    tradeQuery.value = normalizeWeddingTradeQuery((options || {}) as Record<string, any>)
     await loadData()
 })
 </script>
@@ -343,9 +348,7 @@ onLoad(async () => {
     font-weight: 600;
 }
 
-.hero-card__desc,
 .hero-card__meta,
-.panel-card__desc,
 .state-card {
     margin-top: 16rpx;
     color: #6b7280;

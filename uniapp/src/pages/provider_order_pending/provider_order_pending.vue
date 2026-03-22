@@ -2,11 +2,12 @@
     <page-meta :page-style="$theme.pageStyle">
         <navigation-bar :front-color="$theme.navColor" :background-color="$theme.navBgColor" />
     </page-meta>
+    <w-page-nav />
     <view class="provider-order-workbench-page min-h-screen px-[24rpx] py-[24rpx] box-border">
         <view class="hero-card">
             <view class="hero-card__eyebrow">Provider Orders</view>
             <view class="hero-card__title">服务订单工作台</view>
-            <view class="hero-card__desc">{{ currentTabDesc }}</view>
+            <view class="hero-card__meta">{{ tabList[current]?.name || '全部订单' }}</view>
         </view>
 
         <view class="tabs-card mt-[24rpx]">
@@ -83,8 +84,6 @@ const current = ref(0)
 const loading = ref(false)
 const orderLists = ref<any[]>([])
 
-const currentTabDesc = computed(() => tabList.value[current.value]?.desc || '')
-
 const loadLists = async () => {
     loading.value = true
     try {
@@ -155,7 +154,7 @@ onShow(async () => {
     font-weight: 600;
 }
 
-.hero-card__desc,
+.hero-card__meta,
 .state-card {
     margin-top: 16rpx;
     color: #6b7280;

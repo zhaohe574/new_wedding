@@ -2,14 +2,23 @@
     <page-meta :page-style="$theme.pageStyle">
         <navigation-bar :front-color="$theme.navColor" :background-color="$theme.navBgColor" />
     </page-meta>
+    <w-page-nav />
     <view class="wedding-provider-list-page min-h-screen px-[24rpx] py-[24rpx] box-border">
         <view class="hero-card">
             <view class="hero-card__eyebrow">Provider List</view>
-            <view class="hero-card__title">按地区与日期筛选服务人员</view>
-            <view class="hero-card__desc">
-                当前列表只展示在所选县区下存在可售套餐、且服务日期仍可预约的服务人员。
+            <view class="hero-card__title">服务人员</view>
+            <view class="hero-card__meta">{{ selectionSummary || '请选择地区与服务日期后查看结果' }}</view>
+        </view>
+
+        <view class="panel-card mt-[24rpx]">
+            <view class="panel-card__head">
+                <view>
+                    <view class="panel-card__title">筛选结果</view>
+                    <view class="panel-card__meta">共 {{ providerList.length }} 位可预约服务人员</view>
+                </view>
+                <button class="ghost-btn ghost-btn--sm" @click="handleAdjustFilter">调整筛选</button>
             </view>
-            <view class="hero-card__meta">{{ selectionSummary || '请先返回上一步选择地区与日期' }}</view>
+            <view class="filter-meta">{{ filterSummaryText }}</view>
         </view>
 
         <scroll-view class="category-scroll mt-[24rpx]" scroll-x enable-flex>
@@ -17,21 +26,16 @@
                 v-for="item in categoryList"
                 :key="item.id"
                 class="category-chip"
-                :class="{ 'category-chip--active': activeCategoryId === item.id }"
+                :class="{ 'category-chip--active': tradeQuery.category_id === item.id }"
                 @click="handleCategoryChange(item.id)"
             >
                 {{ item.name }}
             </view>
         </scroll-view>
 
-        <view class="panel-card mt-[24rpx]">
-            <view class="panel-card__title">筛选结果</view>
-            <view class="panel-card__desc">切换分类时会自动重置已选服务人员与套餐，避免沿用失效草稿。</view>
-        </view>
-
         <view v-if="loading" class="state-card mt-[24rpx]">正在加载服务人员列表...</view>
         <view v-else-if="!providerList.length" class="state-card mt-[24rpx]">
-            当前地区与日期暂无可预约服务人员，请切换分类或返回上一步调整条件。
+            当前筛选下暂无可预约服务人员，试试调整分类、风格或价格排序。
         </view>
         <view v-else class="provider-grid mt-[24rpx]">
             <view
@@ -62,23 +66,43 @@
 <script setup lang="ts">
 import { getWeddingCategories, getWeddingProviderLists } from '@/api/wedding'
 import {
+    buildWeddingProviderListParams,
     buildWeddingSelectionSummary,
-    getSelectedRegion,
-    getSelectedServiceDate,
-    getWeddingOrderDraft,
-    patchWeddingOrderDraft
+    buildWeddingTradeQueryUrl,
+    normalizeWeddingTradeQuery,
+    patchWeddingOrderDraft,
+    type WeddingTradeQuery
 } from '@/utils/wedding'
-import { onShow } from '@dcloudio/uni-app'
-import { ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
+import { computed, ref } from 'vue'
 
 const defaultAvatar = '/static/images/user/default_avatar.png'
 const categoryList = ref<any[]>([])
 const providerList = ref<any[]>([])
 const loading = ref(false)
-const activeCategoryId = ref(0)
-const selectionSummary = ref('')
-const region = ref<Record<string, any>>({})
-const serviceDate = ref('')
+const tradeQuery = ref<WeddingTradeQuery>(normalizeWeddingTradeQuery())
+
+const selectionSummary = computed(() => buildWeddingSelectionSummary(tradeQuery.value))
+const activeCategoryName = computed(
+    () => categoryList.value.find((item) => item.id === tradeQuery.value.category_id)?.name || '未选择分类'
+)
+const filterSummaryText = computed(() => {
+    const parts = [`分类：${activeCategoryName.value}`]
+    if (tradeQuery.value.tag_ids.length) {
+        parts.push(`风格：${tradeQuery.value.tag_ids.length} 项`)
+    }
+    if (tradeQuery.value.keyword) {
+        parts.push(`关键词：${tradeQuery.value.keyword}`)
+    }
+    if (tradeQuery.value.price_sort === 'asc') {
+        parts.push('价格升序')
+    } else if (tradeQuery.value.price_sort === 'desc') {
+        parts.push('价格降序')
+    } else {
+        parts.push('默认推荐')
+    }
+    return parts.join(' · ')
+})
 
 const getMatchLevelText = (value: string) => {
     const map: Record<string, string> = {
@@ -91,55 +115,43 @@ const getMatchLevelText = (value: string) => {
 
 const formatPrice = (value: number) => Number(value || 0).toFixed(2)
 
-const syncSelection = () => {
-    region.value = getSelectedRegion()
-    serviceDate.value = getSelectedServiceDate()
-    selectionSummary.value = buildWeddingSelectionSummary()
-}
-
 const loadProviders = async () => {
-    if (!activeCategoryId.value || !region.value.district_code || !serviceDate.value) {
+    if (!tradeQuery.value.category_id || !tradeQuery.value.district_code || !tradeQuery.value.service_date) {
         providerList.value = []
         return
     }
 
     loading.value = true
     try {
-        providerList.value = await getWeddingProviderLists({
-            category_id: activeCategoryId.value,
-            district_code: region.value.district_code,
-            service_date: serviceDate.value
-        })
+        providerList.value = await getWeddingProviderLists(buildWeddingProviderListParams(tradeQuery.value))
     } finally {
         loading.value = false
     }
 }
 
 const loadCategories = async () => {
-    const categories = await getWeddingCategories()
-    categoryList.value = categories || []
+    categoryList.value = (await getWeddingCategories()) || []
     if (!categoryList.value.length) {
         providerList.value = []
         return
     }
 
-    const draft = getWeddingOrderDraft()
-    const matchedCategory = categoryList.value.find((item) => item.id === draft.category_id)
-    activeCategoryId.value = matchedCategory?.id || categoryList.value[0].id
-    patchWeddingOrderDraft({
-        category_id: activeCategoryId.value,
-        provider_id: draft.provider_id,
-        package_id: draft.package_id
-    })
-    await loadProviders()
+    const matchedCategory = categoryList.value.find((item) => item.id === tradeQuery.value.category_id)
+    tradeQuery.value = {
+        ...tradeQuery.value,
+        category_id: matchedCategory?.id || categoryList.value[0].id
+    }
 }
 
 const handleCategoryChange = async (categoryId: number) => {
-    if (activeCategoryId.value === categoryId) {
+    if (tradeQuery.value.category_id === categoryId) {
         return
     }
 
-    activeCategoryId.value = categoryId
+    tradeQuery.value = {
+        ...tradeQuery.value,
+        category_id: categoryId
+    }
     patchWeddingOrderDraft({
         category_id: categoryId,
         provider_id: 0,
@@ -151,18 +163,31 @@ const handleCategoryChange = async (categoryId: number) => {
 
 const handleOpenDetail = (providerId: number) => {
     patchWeddingOrderDraft({
-        category_id: activeCategoryId.value,
+        category_id: tradeQuery.value.category_id,
         provider_id: providerId,
         package_id: 0
     })
     uni.navigateTo({
-        url: `/pages/wedding_provider_detail/wedding_provider_detail?provider_id=${providerId}`
+        url: buildWeddingTradeQueryUrl(`/pages/wedding_provider_detail/wedding_provider_detail?provider_id=${providerId}`, tradeQuery.value)
     })
 }
 
-onShow(async () => {
-    syncSelection()
+const handleAdjustFilter = () => {
+    uni.navigateTo({
+        url: buildWeddingTradeQueryUrl('/pages/wedding_region/wedding_region', tradeQuery.value)
+    })
+}
+
+onLoad(async (options) => {
+    tradeQuery.value = normalizeWeddingTradeQuery((options || {}) as Record<string, any>)
     await loadCategories()
+    patchWeddingOrderDraft({
+        category_id: tradeQuery.value.category_id,
+        provider_id: 0,
+        package_id: 0,
+        template_form_data: {}
+    })
+    await loadProviders()
 })
 </script>
 
@@ -202,10 +227,9 @@ onShow(async () => {
     font-weight: 600;
 }
 
-.hero-card__desc,
-.panel-card__desc,
 .state-card,
-.hero-card__meta {
+.hero-card__meta,
+.panel-card__meta {
     margin-top: 16rpx;
     color: #6b7280;
     font-size: 24rpx;
@@ -216,10 +240,24 @@ onShow(async () => {
     color: #831843;
 }
 
+.panel-card__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20rpx;
+}
+
 .panel-card__title {
     color: #111827;
     font-size: 30rpx;
     font-weight: 600;
+}
+
+.filter-meta {
+    margin-top: 18rpx;
+    color: #9ca3af;
+    font-size: 22rpx;
+    line-height: 1.7;
 }
 
 .category-scroll {
@@ -315,5 +353,20 @@ onShow(async () => {
     font-size: 22rpx;
     text-align: right;
     line-height: 1.6;
+}
+
+.ghost-btn {
+    min-width: 164rpx;
+    height: 72rpx;
+    padding: 0 22rpx;
+    border-radius: 999rpx;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1rpx solid rgba(219, 39, 119, 0.12);
+    color: #374151;
+    font-size: 24rpx;
+}
+
+.ghost-btn--sm {
+    margin: 0;
 }
 </style>

@@ -2,13 +2,11 @@
     <page-meta :page-style="$theme.pageStyle">
         <navigation-bar :front-color="$theme.navColor" :background-color="$theme.navBgColor" />
     </page-meta>
+    <w-page-nav />
     <view class="dashboard-page min-h-screen px-[24rpx] py-[24rpx] box-border">
         <view class="dashboard-hero">
             <view class="dashboard-hero__eyebrow">经营驾驶舱</view>
-            <view class="dashboard-hero__title">婚庆预约经营总览</view>
-            <view class="dashboard-hero__desc">
-                面向只读查看用户展示真实订单、支付、改期与评价待办，统计口径与后台工作台保持一致。
-            </view>
+            <view class="dashboard-hero__title">婚庆经营总览</view>
             <view class="dashboard-hero__meta">
                 <view class="dashboard-badge">更新时间 {{ overview.time || '--' }}</view>
                 <view class="dashboard-badge dashboard-badge--soft">
@@ -31,7 +29,6 @@
                 <view v-for="item in todoList" :key="item.label" class="todo-item">
                     <view class="todo-item__label">{{ item.label }}</view>
                     <view class="todo-item__value">{{ item.value }}</view>
-                    <view class="todo-item__desc">{{ item.desc }}</view>
                 </view>
             </view>
         </view>
@@ -285,13 +282,6 @@ onShow(() => {
     font-weight: 600;
 }
 
-.dashboard-hero__desc {
-    margin-top: 16rpx;
-    color: #6b7280;
-    font-size: 26rpx;
-    line-height: 1.8;
-}
-
 .dashboard-hero__meta {
     display: flex;
     flex-wrap: wrap;
@@ -376,13 +366,6 @@ onShow(() => {
     color: #111827;
     font-size: 42rpx;
     font-weight: 600;
-}
-
-.todo-item__desc {
-    margin-top: 10rpx;
-    color: #6b7280;
-    font-size: 22rpx;
-    line-height: 1.7;
 }
 
 .trend-list {

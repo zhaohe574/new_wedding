@@ -7,13 +7,13 @@
         />
         <!-- #endif -->
     </page-meta>
-    <view
-        class="register bg-white min-h-full flex flex-col items-center px-[40rpx] pt-[100rpx] box-border"
-    >
-        <view class="w-full">
-            <view class="text-2xl font-medium mb-[60rpx]">
-                {{ type == 'set' ? '设置登录密码' : '修改登录密码' }}
-            </view>
+    <w-page-nav :title="pageNavTitle" />
+    <view class="change-password-page w-page-shell w-page-shell--auth">
+        <view class="w-auth-brand">
+            <view class="w-auth-brand__title">{{ type == 'set' ? '设置密码' : '修改密码' }}</view>
+            <view class="w-auth-brand__hint">保存后会立即更新当前账号密码</view>
+        </view>
+        <view class="change-password-page__panel w-auth-panel">
             <u-form borderBottom :label-width="150">
                 <u-form-item label="原密码" borderBottom v-if="type != 'set'">
                     <u-input
@@ -43,7 +43,7 @@
                     />
                 </u-form-item>
             </u-form>
-            <view class="mt-[100rpx]">
+            <view class="mt-[72rpx]">
                 <u-button type="primary" shape="circle" @click="handleConfirm"> 确定 </u-button>
             </view>
         </view>
@@ -53,13 +53,14 @@
 <script setup lang="ts">
 import { userChangePwd } from '@/api/user'
 import { onLoad } from '@dcloudio/uni-app'
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 
 const type = ref('')
 const formData = reactive<any>({
     password: '',
     password_confirm: ''
 })
+const pageNavTitle = computed(() => (type.value == 'set' ? '设置登录密码' : '修改密码'))
 
 const handleConfirm = async () => {
     if (!formData.old_password && type.value != 'set') return uni.$u.toast('请输入原来的密码')
@@ -83,8 +84,13 @@ onLoad((options) => {
 })
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 page {
     height: 100%;
+}
+
+.change-password-page__panel {
+    width: 100%;
+    max-width: 680rpx;
 }
 </style>

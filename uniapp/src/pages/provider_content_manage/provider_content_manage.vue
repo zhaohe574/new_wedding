@@ -2,13 +2,11 @@
     <page-meta :page-style="$theme.pageStyle">
         <navigation-bar :front-color="$theme.navColor" :background-color="$theme.navBgColor" />
     </page-meta>
+    <w-page-nav />
     <view class="provider-content-manage-page min-h-screen px-[24rpx] py-[24rpx] box-border">
         <view class="hero-card">
             <view class="hero-card__eyebrow">Provider Content Center</view>
             <view class="hero-card__title">内容互动中心</view>
-            <view class="hero-card__desc">
-                在这里发布服务动态、查看审核状态，并处理自己名下动态评论。本轮统一沿用现有婚庆互动审核规则。
-            </view>
         </view>
 
         <view class="panel-card mt-[24rpx]">
@@ -238,13 +236,6 @@ onShow(async () => {
     color: #1f2937;
     font-size: 44rpx;
     font-weight: 600;
-}
-
-.hero-card__desc {
-    margin-top: 16rpx;
-    color: #6b7280;
-    font-size: 26rpx;
-    line-height: 1.8;
 }
 
 .panel-card__title {

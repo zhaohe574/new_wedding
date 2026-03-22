@@ -2,13 +2,11 @@
     <page-meta :page-style="$theme.pageStyle">
         <navigation-bar :front-color="$theme.navColor" :background-color="$theme.navBgColor" />
     </page-meta>
+    <w-page-nav />
     <view class="provider-public-posts-page min-h-screen px-[24rpx] py-[24rpx] box-border">
         <view class="hero-card">
             <view class="hero-card__eyebrow">Provider Stories</view>
             <view class="hero-card__title">服务动态</view>
-            <view class="hero-card__desc">
-                这里只展示审核通过的服务动态与评论，互动内容的审核口径与婚庆业务规则保持一致。
-            </view>
         </view>
 
         <view v-if="loading" class="state-card mt-[24rpx]">正在加载服务动态...</view>
@@ -158,7 +156,6 @@ onShow(async () => {
     font-weight: 600;
 }
 
-.hero-card__desc,
 .state-card {
     margin-top: 16rpx;
     color: #6b7280;

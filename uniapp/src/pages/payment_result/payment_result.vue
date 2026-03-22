@@ -7,14 +7,15 @@
         />
         <!-- #endif -->
     </page-meta>
+    <w-page-nav />
     <!-- 页面状态 -->
     <page-status :status="status">
         <template #error>
             <u-empty text="订单不存在" mode="order"></u-empty>
         </template>
         <template #default>
-            <view class="payment-result p-[20rpx]">
-                <view class="result bg-white p-[20rpx] rounded-md">
+            <view class="payment-result w-page-shell">
+                <view class="result">
                     <view class="flex flex-col items-center my-[40rpx]">
                         <!-- 支付状态图片 -->
                         <u-image
@@ -55,7 +56,7 @@
                         </view>
                     </view>
                 </view>
-                <view class="mt-[40rpx]">
+                <view class="payment-result__actions">
                     <view class="mb-[20rpx]">
                         <u-button
                             v-if="pageOptions.from == 'recharge' || pageOptions.from == 'service_order'"
@@ -163,11 +164,28 @@ onLoad(async (options: any) => {
 </script>
 
 <style lang="scss" scoped>
+.result {
+    padding: 28rpx;
+    border-radius: 28rpx;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1rpx solid rgba(219, 39, 119, 0.1);
+    box-shadow: 0 18rpx 48rpx rgba(31, 41, 55, 0.06);
+}
+
+.payment-result__actions {
+    margin-top: 40rpx;
+}
+
 .result-info {
+    margin-top: 24rpx;
+
     .result-info__item {
         display: flex;
         justify-content: space-between;
         margin-bottom: 20rpx;
+        gap: 16rpx;
+        color: #4b5563;
+        font-size: 24rpx;
     }
 }
 </style>

@@ -7,9 +7,10 @@
         />
         <!-- #endif -->
     </page-meta>
-    <view class="user-set">
+    <w-page-nav />
+    <view class="user-set w-page-shell">
         <navigator :url="`/pages/user_data/user_data`">
-            <view class="item flex bg-white mt-[20rpx]">
+            <view class="item user-set__profile">
                 <u-avatar :src="userInfo.avatar" shape="square" :size="100"></u-avatar>
                 <view class="ml-[20rpx] flex flex-1 justify-between items-center">
                     <view>
@@ -21,7 +22,7 @@
             </view>
         </navigator>
         <view
-            class="item bg-white mt-[20rpx] btn-border flex flex-1 justify-between"
+            class="item user-set__item mt-[20rpx] flex flex-1 justify-between"
             @click="handlePwd"
         >
             <view class="">登录密码</view>
@@ -30,7 +31,7 @@
         <!--  #ifdef H5 || MP-WEIXIN -->
         <view
             v-if="isWeixin"
-            class="item bg-white flex flex-1 justify-between"
+            class="item user-set__item flex flex-1 justify-between"
             @click="bindWechatLock"
         >
             <view class="">绑定微信</view>
@@ -43,19 +44,19 @@
         </view>
         <!-- #endif -->
         <navigator :url="`/pages/agreement/agreement?type=${AgreementEnum.PRIVACY}`">
-            <view class="item bg-white mt-[20rpx] btn-border flex flex-1 justify-between">
+            <view class="item user-set__item mt-[20rpx] flex flex-1 justify-between">
                 <view class="">隐私政策</view>
                 <u-icon name="arrow-right" color="#666"></u-icon>
             </view>
         </navigator>
         <navigator :url="`/pages/agreement/agreement?type=${AgreementEnum.SERVICE}`">
-            <view class="item bg-white btn-border flex flex-1 justify-between">
+            <view class="item user-set__item flex flex-1 justify-between">
                 <view class="">服务协议</view>
                 <u-icon name="arrow-right" color="#666"></u-icon>
             </view>
         </navigator>
         <navigator url="/pages/as_us/as_us">
-            <view class="item bg-white flex flex-1 justify-between">
+            <view class="item user-set__item flex flex-1 justify-between">
                 <view class="">关于我们</view>
                 <view class="flex justify-between">
                     <view class="text-muted mr-[20rpx]">
@@ -239,10 +240,19 @@ onLoad(async (options) => {
 .user-set {
     .item {
         padding: 30rpx;
+        border-radius: 24rpx;
+        background: rgba(255, 255, 255, 0.94);
+        border: 1rpx solid rgba(219, 39, 119, 0.1);
+        box-shadow: 0 18rpx 48rpx rgba(31, 41, 55, 0.06);
     }
+}
 
-    .btn-border {
-        border-bottom: 2rpx solid #f8f8f8;
-    }
+.user-set__profile {
+    display: flex;
+    align-items: center;
+}
+
+.user-set__item {
+    margin-top: 16rpx;
 }
 </style>

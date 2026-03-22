@@ -3,10 +3,11 @@
         <!-- #ifndef H5 -->
         <navigation-bar
             :front-color="$theme.navColor"
-            :background-color="$theme.navBgColor"
+            background-color="transparent"
         />
         <!-- #endif -->
     </page-meta>
+    <w-page-nav variant="tab" :show-back="false" :title="userNavTitle" />
     <view class="user">
         <view v-for="(item, index) in state.pages" :key="index">
             <template v-if="item.name == 'user-info'">
@@ -25,13 +26,9 @@
                 <w-user-banner :content="item.content" :styles="item.styles" />
             </template>
         </view>
-        <view
-            v-if="isLogin && entryCards.length"
-            class="entry-panel"
-        >
+        <view v-if="isLogin && entryCards.length" class="entry-panel">
             <view class="entry-panel__header">
-                <view class="entry-panel__title">专属工作入口</view>
-                <view class="entry-panel__desc">根据当前账号权限与全局业务规则展示可进入的业务空间</view>
+                <view class="entry-panel__title">我的业务空间</view>
             </view>
             <view class="entry-panel__list">
                 <view
@@ -43,11 +40,9 @@
                 >
                     <view class="entry-card__meta">{{ item.meta }}</view>
                     <view class="entry-card__title">{{ item.title }}</view>
-                    <view class="entry-card__desc">{{ item.desc }}</view>
                 </view>
             </view>
-            <view class="entry-panel__foot">婚礼基础档案：{{ weddingProfileStatusText }}</view>
-            <view v-if="selectionSummaryText" class="entry-panel__foot">当前地区与档期：{{ selectionSummaryText }}</view>
+            <view class="entry-panel__foot">婚礼基础档案 {{ weddingProfileStatusText }}</view>
         </view>
         <tabbar />
     </view>
@@ -55,12 +50,12 @@
 
 <script setup lang="ts">
 import { getDecorate } from '@/api/shop'
-import cache from '@/utils/cache'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
+import { buildWeddingTradeQueryUrl } from '@/utils/wedding'
 import { onShow } from '@dcloudio/uni-app'
 import { storeToRefs } from 'pinia'
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive } from 'vue'
 const state = reactive<{
     meta: any[]
     pages: any[]
@@ -79,11 +74,25 @@ const getData = async () => {
 const appStore = useAppStore()
 const userStore = useUserStore()
 const { userInfo, isLogin } = storeToRefs(userStore)
-const selectionSummaryText = ref('')
 const serviceBusinessConfig = computed(() => appStore.getServiceBusinessConfig || {})
 const entryCards = computed(() => {
     const displayConfig = serviceBusinessConfig.value.display || {}
-    const cards = []
+    const cards = [
+        {
+            meta: 'My Orders',
+            title: '我的婚庆订单',
+            desc: '查看下单、接单、支付与凭证审核进度',
+            url: '/pages/wedding_order_list/wedding_order_list',
+            cardClass: ''
+        },
+        {
+            meta: 'Notice Center',
+            title: '通知中心',
+            desc: '统一查看订单、改期、支付与评价的站内提醒',
+            url: '/pages/notice_center/notice_center',
+            cardClass: ''
+        }
+    ]
 
     if (Number(displayConfig.wedding_profile_enabled ?? 0) === 1) {
         cards.push({
@@ -96,26 +105,10 @@ const entryCards = computed(() => {
     }
 
     cards.push({
-        meta: 'Region & Date',
-        title: '地区与档期前置',
-        desc: '先选县区和服务日期，为后续筛选做准备',
-        url: '/pages/wedding_region/wedding_region',
-        cardClass: ''
-    })
-
-    cards.push({
-        meta: 'My Orders',
-        title: '我的婚庆订单',
-        desc: '查看下单、接单、支付与凭证审核进度',
-        url: '/pages/wedding_order_list/wedding_order_list',
-        cardClass: ''
-    })
-
-    cards.push({
-        meta: 'Notice Center',
-        title: '通知中心',
-        desc: '统一查看订单、改期、支付与评价的站内提醒',
-        url: '/pages/notice_center/notice_center',
+        meta: 'Wedding Query',
+        title: '查询档期',
+        desc: '重新选择地区、日期与筛选条件',
+        url: buildWeddingTradeQueryUrl('/pages/wedding_region/wedding_region'),
         cardClass: ''
     })
 
@@ -144,6 +137,7 @@ const entryCards = computed(() => {
 const weddingProfileStatusText = computed(() => {
     return Number(serviceBusinessConfig.value?.display?.wedding_profile_enabled ?? 0) === 1 ? '已启用' : '已关闭'
 })
+const userNavTitle = computed(() => state.meta[0]?.content?.title || '我的')
 
 const navigateTo = (url: string) => {
     uni.navigateTo({
@@ -151,29 +145,30 @@ const navigateTo = (url: string) => {
     })
 }
 
-const refreshSelectionSummary = () => {
-    const selectedRegion = cache.get('selected_region') || {}
-    const selectedServiceDate = cache.get('selected_service_date') || ''
-    const regionText = [selectedRegion.province_name, selectedRegion.city_name, selectedRegion.district_name]
-        .filter(Boolean)
-        .join(' / ')
-    const summaryItems = [regionText, selectedServiceDate].filter(Boolean)
-    selectionSummaryText.value = summaryItems.join('，')
-}
-
 onShow(() => {
-    userStore.getUser()
-    refreshSelectionSummary()
+    if (isLogin.value) {
+        userStore.getUser()
+    }
 })
 getData()
 </script>
 
 <style lang="scss" scoped>
+.user {
+    min-height: 100vh;
+    padding-top: var(--w-page-nav-height);
+    padding-bottom: calc(150rpx + env(safe-area-inset-bottom));
+    background:
+        radial-gradient(circle at top right, rgba(219, 39, 119, 0.08), transparent 24%),
+        linear-gradient(180deg, #fffafc, #f8f3ef 44%, #f7f3f0);
+}
+
 .entry-panel {
     margin: 20rpx;
     padding: 28rpx;
     border-radius: 28rpx;
     background: rgba(255, 255, 255, 0.94);
+    border: 1rpx solid rgba(219, 39, 119, 0.12);
     box-shadow: 0 18rpx 48rpx rgba(31, 41, 55, 0.06);
 }
 
@@ -185,12 +180,6 @@ getData()
     color: #1f2937;
     font-size: 32rpx;
     font-weight: 600;
-}
-
-.entry-panel__desc {
-    margin-top: 10rpx;
-    color: #6b7280;
-    font-size: 24rpx;
 }
 
 .entry-panel__list {
@@ -227,12 +216,5 @@ getData()
     color: #111827;
     font-size: 30rpx;
     font-weight: 600;
-}
-
-.entry-card__desc {
-    margin-top: 10rpx;
-    color: #6b7280;
-    font-size: 24rpx;
-    line-height: 1.7;
 }
 </style>

@@ -90,6 +90,21 @@ class NoticeEnum
             self::BIND_MOBILE_CAPTCHA => '绑定手机验证码',
             self::CHANGE_MOBILE_CAPTCHA => '变更手机验证码',
             self::FIND_LOGIN_PASSWORD_CAPTCHA => '找回登录密码验证码',
+            201 => '婚庆下单成功',
+            202 => '婚庆待支付提醒',
+            203 => '婚庆接单成功',
+            204 => '婚庆订单拒单',
+            205 => '婚庆支付成功',
+            206 => '婚庆线下凭证已提交',
+            207 => '婚庆线下凭证审核通过',
+            208 => '婚庆线下凭证审核驳回',
+            209 => '婚庆改期申请提交',
+            210 => '婚庆改期处理结果',
+            211 => '婚庆待评价提醒',
+            212 => '婚庆评价已提交',
+            213 => '婚庆评价审核结果',
+            214 => '婚庆退款申请已提交',
+            215 => '婚庆退款处理结果',
         ];
 
         if ($flag) {
@@ -138,6 +153,21 @@ class NoticeEnum
             self::BIND_MOBILE_CAPTCHA => '验证码:code',
             self::CHANGE_MOBILE_CAPTCHA => '验证码:code',
             self::FIND_LOGIN_PASSWORD_CAPTCHA => '验证码:code',
+            201 => '订单号:order_sn，服务人员:provider_name，套餐:package_name，服务日期:service_date，订单金额:order_amount，订单状态:order_status_desc',
+            202 => '订单号:order_sn，服务日期:service_date，订单金额:order_amount',
+            203 => '订单号:order_sn，服务人员:provider_name，服务日期:service_date',
+            204 => '订单号:order_sn，服务人员:provider_name',
+            205 => '订单号:order_sn，订单金额:order_amount，服务日期:service_date',
+            206 => '订单号:order_sn，服务日期:service_date',
+            207 => '订单号:order_sn，服务日期:service_date',
+            208 => '订单号:order_sn',
+            209 => '订单号:order_sn，服务日期:service_date',
+            210 => '订单号:order_sn，改期结果:reschedule_result',
+            211 => '订单号:order_sn，服务人员:provider_name',
+            212 => '订单号:order_sn，服务日期:service_date',
+            213 => '订单号:order_sn，审核结果:review_result',
+            214 => '订单号:order_sn，退款金额:refund_amount',
+            215 => '订单号:order_sn，退款结果:refund_result',
         ];
 
         if ($flag) {
@@ -223,7 +253,68 @@ class NoticeEnum
      */
     public static function getMnpExample($sceneId, $flag = false)
     {
-        $desc = [];
+        $desc = [
+            201 => [
+                '建议模板：订单提交成功通知',
+                '字段映射示例：[{"key":"thing1","value":"订单 {order_sn}"},{"key":"name2","value":"{provider_name}"},{"key":"date3","value":"{service_date}"}]',
+                '默认跳转：/pages/wedding_order_detail/wedding_order_detail?order_id={order_id}',
+            ],
+            202 => [
+                '建议模板：待支付提醒',
+                '字段映射示例：[{"key":"thing1","value":"订单 {order_sn}"},{"key":"amount2","value":"￥{order_amount}"},{"key":"date3","value":"{service_date}"}]',
+                '默认跳转：/pages/wedding_order_detail/wedding_order_detail?order_id={order_id}',
+            ],
+            203 => [
+                '建议模板：服务人员接单通知',
+                '字段映射示例：[{"key":"thing1","value":"订单 {order_sn}"},{"key":"name2","value":"{provider_name}"},{"key":"date3","value":"{service_date}"}]',
+                '默认跳转：/pages/wedding_order_detail/wedding_order_detail?order_id={order_id}',
+            ],
+            204 => [
+                '建议模板：订单拒单通知',
+                '字段映射示例：[{"key":"thing1","value":"订单 {order_sn}"},{"key":"thing2","value":"{provider_name} 已拒单"}]',
+                '默认跳转：/pages/wedding_order_detail/wedding_order_detail?order_id={order_id}',
+            ],
+            205 => [
+                '建议模板：支付成功通知',
+                '字段映射示例：[{"key":"thing1","value":"订单 {order_sn}"},{"key":"amount2","value":"￥{order_amount}"},{"key":"date3","value":"{service_date}"}]',
+                '默认跳转：/pages/wedding_order_detail/wedding_order_detail?order_id={order_id}',
+            ],
+            207 => [
+                '建议模板：线下凭证审核通过通知',
+                '字段映射示例：[{"key":"thing1","value":"订单 {order_sn}"},{"key":"thing2","value":"线下凭证审核通过"}]',
+                '默认跳转：/pages/wedding_order_detail/wedding_order_detail?order_id={order_id}',
+            ],
+            208 => [
+                '建议模板：线下凭证审核驳回通知',
+                '字段映射示例：[{"key":"thing1","value":"订单 {order_sn}"},{"key":"thing2","value":"线下凭证审核未通过"}]',
+                '默认跳转：/pages/wedding_order_detail/wedding_order_detail?order_id={order_id}',
+            ],
+            210 => [
+                '建议模板：改期处理结果通知',
+                '字段映射示例：[{"key":"thing1","value":"订单 {order_sn}"},{"key":"thing2","value":"{reschedule_result}"}]',
+                '默认跳转：/pages/wedding_order_detail/wedding_order_detail?order_id={order_id}',
+            ],
+            211 => [
+                '建议模板：待评价提醒',
+                '字段映射示例：[{"key":"thing1","value":"订单 {order_sn}"},{"key":"name2","value":"{provider_name}"}]',
+                '默认跳转：/pages/wedding_order_detail/wedding_order_detail?order_id={order_id}',
+            ],
+            213 => [
+                '建议模板：评价审核结果通知',
+                '字段映射示例：[{"key":"thing1","value":"订单 {order_sn}"},{"key":"thing2","value":"{review_result}"}]',
+                '默认跳转：/pages/wedding_order_detail/wedding_order_detail?order_id={order_id}',
+            ],
+            214 => [
+                '建议模板：退款申请提交成功通知',
+                '字段映射示例：[{"key":"thing1","value":"订单 {order_sn}"},{"key":"amount2","value":"￥{refund_amount}"}]',
+                '默认跳转：/pages/wedding_order_detail/wedding_order_detail?order_id={order_id}',
+            ],
+            215 => [
+                '建议模板：退款处理结果通知',
+                '字段映射示例：[{"key":"thing1","value":"订单 {order_sn}"},{"key":"thing2","value":"{refund_result}"}]',
+                '默认跳转：/pages/wedding_order_detail/wedding_order_detail?order_id={order_id}',
+            ],
+        ];
 
         if ($flag) {
             return $desc;
@@ -240,7 +331,33 @@ class NoticeEnum
      */
     public static function getWorkExample($sceneId, $flag = false)
     {
-        $desc = [];
+        $desc = [
+            201 => [
+                '消息标题示例：收到新婚庆订单',
+                '消息描述示例：订单 {order_sn} 已提交，请尽快确认是否接单。服务日期：{service_date}。',
+                '默认跳转：服务人员订单详情页或企业微信 H5 订单详情链接',
+            ],
+            205 => [
+                '消息标题示例：订单已支付',
+                '消息描述示例：订单 {order_sn} 已支付成功，请按服务日期推进履约安排。',
+                '默认跳转：服务人员订单详情页或企业微信 H5 订单详情链接',
+            ],
+            206 => [
+                '消息标题示例：收到线下支付凭证',
+                '消息描述示例：订单 {order_sn} 已提交线下支付凭证，请尽快核验处理。',
+                '默认跳转：服务人员订单详情页或企业微信 H5 订单详情链接',
+            ],
+            209 => [
+                '消息标题示例：收到改期申请',
+                '消息描述示例：订单 {order_sn} 已提交改期申请，请确认新的服务日期。',
+                '默认跳转：服务人员订单详情页或企业微信 H5 订单详情链接',
+            ],
+            212 => [
+                '消息标题示例：收到订单评价',
+                '消息描述示例：订单 {order_sn} 已收到用户评价，请按审核规则及时处理。',
+                '默认跳转：服务人员订单详情页或企业微信 H5 订单详情链接',
+            ],
+        ];
 
         if ($flag) {
             return $desc;

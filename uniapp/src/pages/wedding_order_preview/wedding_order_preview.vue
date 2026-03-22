@@ -2,13 +2,12 @@
     <page-meta :page-style="$theme.pageStyle">
         <navigation-bar :front-color="$theme.navColor" :background-color="$theme.navBgColor" />
     </page-meta>
+    <w-page-nav />
     <view class="wedding-order-preview-page min-h-screen px-[24rpx] py-[24rpx] box-border">
         <view class="hero-card">
             <view class="hero-card__eyebrow">Order Preview</view>
             <view class="hero-card__title">订单预览</view>
-            <view class="hero-card__desc">
-                当前价格与命中层级全部来自服务端重算结果。确认后将创建真实订单并进入待服务人员确认流程。
-            </view>
+            <view class="hero-card__meta">确认信息后提交订单</view>
         </view>
 
         <view v-if="loading" class="state-card mt-[24rpx]">正在生成订单预览...</view>
@@ -81,11 +80,10 @@
 
             <view class="panel-card mt-[24rpx]">
                 <view class="panel-card__title">服务内容摘要</view>
-                <view v-if="!(preview.template_summary.pages || []).length" class="panel-card__desc">暂无可展示的模板填写结果。</view>
+                <view v-if="!(preview.template_summary.pages || []).length" class="panel-card__meta">暂无可展示的模板填写结果。</view>
                 <view v-else class="template-page-list">
                     <view v-for="(page, pageIndex) in preview.template_summary.pages" :key="pageIndex" class="template-page-card">
                         <view class="template-page-card__title">{{ page.title || `第 ${pageIndex + 1} 页` }}</view>
-                        <view v-if="page.description" class="template-page-card__desc">{{ page.description }}</view>
                         <view class="detail-list">
                             <view v-for="field in page.fields || []" :key="field.field_key" class="detail-row">
                                 <view class="detail-row__label">{{ field.label }}</view>
@@ -126,11 +124,14 @@
 <script setup lang="ts">
 import { createWeddingOrder, previewWeddingOrder } from '@/api/wedding'
 import {
-    getSelectedRegion,
-    getSelectedServiceDate,
+    BUYER_ORDER_SUBSCRIBE_SCENES,
+    buildWeddingTradeQueryUrl,
     getWeddingOrderDraft,
+    mergeWeddingSubscribeScenes,
+    normalizeWeddingTradeQuery,
     patchWeddingOrderDraft,
-    requestWeddingSubscribeMessages
+    requestWeddingSubscribeMessages,
+    type WeddingTradeQuery
 } from '@/utils/wedding'
 import { useAppStore } from '@/stores/app'
 import { onLoad } from '@dcloudio/uni-app'
@@ -140,6 +141,7 @@ const loading = ref(false)
 const creating = ref(false)
 const paymentType = ref(1)
 const appStore = useAppStore()
+const tradeQuery = ref<WeddingTradeQuery>(normalizeWeddingTradeQuery())
 const preview = reactive<any>({
     provider: {},
     package: {},
@@ -196,20 +198,21 @@ const redirectBack = () => {
     const draft = getWeddingOrderDraft()
     if (draft.provider_id) {
         uni.redirectTo({
-            url: `/pages/wedding_provider_detail/wedding_provider_detail?provider_id=${draft.provider_id}`
+            url: buildWeddingTradeQueryUrl(
+                `/pages/wedding_provider_detail/wedding_provider_detail?provider_id=${draft.provider_id}`,
+                tradeQuery.value
+            )
         })
         return
     }
 
     uni.redirectTo({
-        url: '/pages/wedding_provider_list/wedding_provider_list'
+        url: buildWeddingTradeQueryUrl('/pages/wedding_provider_list/wedding_provider_list', tradeQuery.value)
     })
 }
 
 const loadPreview = async () => {
     const draft = getWeddingOrderDraft()
-    const selectedRegion = getSelectedRegion()
-    const selectedServiceDate = getSelectedServiceDate()
     if (!draft.provider_id || !draft.package_id || !draft.category_id) {
         uni.showToast({ title: '请先完成套餐与模板填写', icon: 'none' })
         setTimeout(() => {
@@ -223,8 +226,8 @@ const loadPreview = async () => {
         const data = await previewWeddingOrder({
             provider_id: draft.provider_id,
             package_id: draft.package_id,
-            district_code: selectedRegion.district_code,
-            service_date: selectedServiceDate,
+            district_code: tradeQuery.value.district_code,
+            service_date: tradeQuery.value.service_date,
             template_form_data: draft.template_form_data
         })
         Object.assign(preview, data || {})
@@ -252,7 +255,7 @@ const handleCreateOrder = async () => {
 
     creating.value = true
     try {
-        await requestWeddingSubscribeMessages([201])
+        await requestWeddingSubscribeMessages(mergeWeddingSubscribeScenes(BUYER_ORDER_SUBSCRIBE_SCENES))
         const payload = {
             ...preview.preview_payload,
             payment_type: paymentType.value
@@ -269,7 +272,8 @@ const handleCreateOrder = async () => {
     }
 }
 
-onLoad(async () => {
+onLoad(async (options) => {
+    tradeQuery.value = normalizeWeddingTradeQuery((options || {}) as Record<string, any>)
     if (!Object.keys(appStore.getServiceBusinessConfig || {}).length) {
         await appStore.getConfig()
     }
@@ -313,8 +317,8 @@ onLoad(async () => {
     font-weight: 600;
 }
 
-.hero-card__desc,
-.panel-card__desc,
+.hero-card__meta,
+.panel-card__meta,
 .state-card,
 .footer-note {
     margin-top: 16rpx;
@@ -395,12 +399,6 @@ onLoad(async () => {
 
 .template-page-card {
     padding: 24rpx;
-}
-
-.template-page-card__desc {
-    margin-top: 10rpx;
-    color: #6b7280;
-    font-size: 22rpx;
 }
 
 .footer-note {

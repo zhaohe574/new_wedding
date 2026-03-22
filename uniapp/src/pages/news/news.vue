@@ -3,35 +3,30 @@
         <!-- #ifndef H5 -->
         <navigation-bar
             :front-color="$theme.navColor"
-            :background-color="$theme.navBgColor"
+            background-color="transparent"
         />
         <!-- #endif -->
     </page-meta>
-    <!-- #ifndef H5 -->
-    <u-sticky
-        h5-nav-height="0"
-        bg-color="transparent"
-    >
-        <u-navbar
-            :is-back="false"
-            :is-fixed="false"
-            title="资讯"
-            :border-bottom="false"
-            :title-bold="true"
-            :title-color="$theme.navColor"
-            :background="{ background: $theme.navBgColor }"
-        >
-        </u-navbar>
-    </u-sticky>
-    <!-- #endif -->
-    <view class="news">
-        <!-- 搜索 -->
-        <navigator class="news-search px-[24rpx] py-[14rpx] bg-white" url="/pages/search/search">
-            <u-search placeholder="请输入关键词搜索" disabled :show-action="false"></u-search>
+    <w-page-nav variant="tab" :show-back="false" />
+    <view class="news-page w-page-shell w-page-shell--tab">
+        <view class="w-card-soft news-head">
+            <view class="w-section-caption">Wedding Moments</view>
+            <view class="news-head__title">婚礼动态</view>
+        </view>
+
+        <navigator class="w-card news-search" url="/pages/search/search">
+            <u-search
+                placeholder="搜索婚礼灵感与筹备内容"
+                disabled
+                :show-action="false"
+            ></u-search>
         </navigator>
 
-        <!-- 内容 -->
+        <view v-if="!tabList.length" class="w-state-card">当前暂无可浏览动态。</view>
+
         <tabs
+            v-else
+            class="tabs-shell"
             :current="current"
             @change="handleChange"
             height="80"
@@ -39,7 +34,7 @@
             :barStyle="{ bottom: '0' }"
         >
             <tab v-for="(item, i) in tabList" :key="i" :name="item.name">
-                <view class="news-list pt-[20rpx]">
+                <view class="news-list-shell">
                     <news-list :cid="item.id" :i="i" :index="current"></news-list>
                 </view>
             </tab>
@@ -49,37 +44,60 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed } from 'vue'
-import { onLoad, onShow, onReady } from '@dcloudio/uni-app'
+import { ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 import NewsList from './component/news-list.vue'
 import { getArticleCate } from '@/api/news'
 
-const tabList = ref<any>([])
-const current = ref<number>(0)
+const tabList = ref<any[]>([])
+const current = ref(0)
 
 const handleChange = (index: number) => {
-    console.log(index)
     current.value = Number(index)
 }
 
 const getData = async () => {
     const data = await getArticleCate()
-    tabList.value = [{ name: '全部', id: '' }].concat(data)
+    tabList.value = [{ name: '全部', id: '' }].concat(data || [])
 }
 
-onLoad((options) => {
+onLoad(() => {
     getData()
 })
 </script>
 
 <style lang="scss">
-.news {
-    &-search {
-        margin-bottom: 2rpx;
-    }
+.news-page {
+    display: flex;
+    flex-direction: column;
+    padding-top: calc(var(--w-page-nav-height) + 24rpx);
+}
 
-    &-list {
-        height: calc(100vh - 272rpx - env(safe-area-inset-bottom));
-    }
+.news-head__title {
+    margin-top: 10rpx;
+    color: #111827;
+    font-size: 40rpx;
+    font-weight: 600;
+}
+
+.news-search {
+    margin-top: 20rpx;
+    padding: 14rpx 16rpx;
+}
+
+.tabs-shell {
+    flex: 1;
+    min-height: 0;
+    margin-top: 20rpx;
+    padding: 0 8rpx 12rpx;
+    border-radius: 28rpx;
+    background: rgba(255, 255, 255, 0.76);
+    border: 1rpx solid rgba(219, 39, 119, 0.08);
+    overflow: hidden;
+}
+
+.news-list-shell {
+    height: 100%;
+    padding-top: 20rpx;
 }
 </style>

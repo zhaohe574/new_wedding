@@ -69,7 +69,7 @@ const menus = ref([
         type: MenuTypeEnum.APPTOOL,
         children: [
             {
-                name: '文章资讯',
+                name: '文章动态',
                 type: LinkTypeEnum.ARTICLE_LIST,
                 link: {}
             }

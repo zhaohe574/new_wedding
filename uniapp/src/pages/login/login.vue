@@ -4,17 +4,18 @@
         <navigation-bar :front-color="$theme.navColor" :background-color="$theme.navBgColor" />
         <!-- #endif -->
     </page-meta>
-    <view
-        class="bg-white login min-h-full flex flex-col items-center px-[40rpx] pt-[120rpx] box-border"
-    >
-        <view>
+    <w-page-nav />
+    <view class="login-page w-page-shell w-page-shell--auth">
+        <view class="w-auth-brand">
             <image
                 :src="appStore.getWebsiteConfig.shop_logo"
                 mode="widthFix"
-                class="w-[160rpx] h-[160rpx] rounded-full"
+                class="w-auth-brand__logo"
             />
+            <view class="w-auth-brand__title">婚庆服务预约</view>
+            <view class="w-auth-brand__hint">登录后继续预约与查看订单</view>
         </view>
-        <view class="w-full mt-[140rpx] pb-[60rpx]">
+        <view class="login-page__panel w-auth-panel">
             <block v-if="!phoneLogin">
                 <!-- #ifdef MP-WEIXIN || H5 -->
                 <view v-if="isOpenOtherAuth && isWeixin && inWxAuth">
@@ -29,7 +30,7 @@
                 </view>
                 <!-- #endif -->
 
-                <view class="mt-[40rpx]">
+                <view class="mt-[24rpx]">
                     <u-button
                         @click="phoneLogin = !phoneLogin"
                         :customStyle="{ height: '100rpx' }"
@@ -121,7 +122,7 @@
                 </template>
             </block>
 
-            <view class="mt-[40rpx]" v-if="isOpenAgreement">
+                <view class="mt-[32rpx]" v-if="isOpenAgreement">
                 <u-checkbox v-model="isCheckAgreement" shape="circle">
                     <view class="text-xs flex">
                         已阅读并同意
@@ -149,7 +150,7 @@
                 </u-checkbox>
             </view>
             <block v-if="phoneLogin">
-                <view class="mt-[60rpx]">
+                <view class="mt-[48rpx]">
                     <u-button
                         type="primary"
                         @click="handleLogin(formData.scene)"
@@ -162,7 +163,7 @@
                         登录
                     </u-button>
                 </view>
-                <view class="flex justify-between mt-[40rpx]">
+                <view class="flex justify-between mt-[28rpx] login-page__foot">
                     <view
                         >已有账号，使用
                         <span
@@ -473,8 +474,18 @@ onLoad(async () => {
 })
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 page {
     height: 100%;
+}
+
+.login-page__panel {
+    width: 100%;
+    max-width: 680rpx;
+}
+
+.login-page__foot {
+    color: #6b7280;
+    font-size: 24rpx;
 }
 </style>

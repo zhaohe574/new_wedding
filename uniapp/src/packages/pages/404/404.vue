@@ -7,6 +7,7 @@
         />
         <!-- #endif -->
     </page-meta>
+    <w-page-nav />
     <view class="h-screen flex flex-col justify-center items-center">
         <view>
             <u-empty text="对不起，您访问的页面不存在" mode="data"></u-empty>

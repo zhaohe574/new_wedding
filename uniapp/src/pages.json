@@ -3,35 +3,29 @@
         {
             "path": "pages/index/index",
             "style": {
-                // #ifndef H5
+                // #ifdef MP-WEIXIN
                 "navigationStyle": "custom",
                 // #endif
-                // #ifdef H5
-                "navigationBarTitleText": "首页"
-                // #endif
+                "navigationBarTitleText": " "
             }
         },
         {
             "path": "pages/news/news",
             "style": {
-                // #ifndef H5
+                // #ifdef MP-WEIXIN
                 "navigationStyle": "custom",
                 // #endif
-                // #ifdef H5
-                "navigationBarTitleText": "资讯",
-                // #endif
+                "navigationBarTitleText": "动态",
                 "disableScroll": true
             }
         },
         {
             "path": "pages/user/user",
             "style": {
-                // #ifndef H5
+                // #ifdef MP-WEIXIN
                 "navigationStyle": "custom",
                 // #endif
-                // #ifdef H5
-                "navigationBarTitleText": "个人中心"
-                // #endif
+                "navigationBarTitleText": "我的"
             }
         },
         {
@@ -131,7 +125,10 @@
             }
         },
         {
-            "path": "pages/webview/webview"
+            "path": "pages/webview/webview",
+            "style": {
+                "navigationBarTitleText": "网页浏览"
+            }
         },
         {
             "path": "pages/bind_mobile/bind_mobile",
@@ -142,7 +139,10 @@
         {
             "path": "pages/empty/empty",
             "style": {
-                "navigationStyle": "custom"
+                // #ifdef MP-WEIXIN
+                "navigationStyle": "custom",
+                // #endif
+                "navigationBarTitleText": "提示"
             }
         },
         {
@@ -211,6 +211,9 @@
         {
             "path": "pages/wedding_region/wedding_region",
             "style": {
+                // #ifdef MP-WEIXIN
+                "navigationStyle": "custom",
+                // #endif
                 "navigationBarTitleText": "地区与档期"
             },
             "meta": {
@@ -368,9 +371,12 @@
 	}],
     "globalStyle": {
         "navigationBarTextStyle": "black",
-        "navigationBarTitleText": "商城",
+        "navigationBarTitleText": "婚庆服务",
         "navigationBarBackgroundColor": "#FFFFFF",
         "backgroundColor": "#F8F8F8",
+        "mp-weixin": {
+            "navigationStyle": "custom"
+        },
         "h5": {
             "navigationStyle": "custom"
         }
@@ -389,7 +395,7 @@
                 "iconPath": "static/images/tabbar/news.png",
                 "selectedIconPath": "static/images/tabbar/news_s.png",
                 "pagePath": "pages/news/news",
-                "text": "资讯"
+                "text": "动态"
             },
             {
                 "iconPath": "static/images/tabbar/user.png",

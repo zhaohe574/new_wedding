@@ -7,6 +7,7 @@
         />
         <!-- #endif -->
     </page-meta>
+    <w-page-nav />
     <view class="news-detail bg-white">
         <!-- 标题信心 -->
         <view class="news-detail-header py-[20rpx] px-[30rpx]">

@@ -2,11 +2,11 @@
     <page-meta :page-style="$theme.pageStyle">
         <navigation-bar :front-color="$theme.navColor" :background-color="$theme.navBgColor" />
     </page-meta>
+    <w-page-nav />
     <view class="wedding-order-list-page min-h-screen px-[24rpx] py-[24rpx] box-border">
         <view class="hero-card">
             <view class="hero-card__eyebrow">Wedding Orders</view>
             <view class="hero-card__title">我的婚庆订单</view>
-            <view class="hero-card__desc">统一查看下单、接单、支付与线下凭证审核进度。</view>
         </view>
 
         <scroll-view class="status-scroll mt-[24rpx]" scroll-x enable-flex>
@@ -136,7 +136,6 @@ onShow(async () => {
     font-weight: 600;
 }
 
-.hero-card__desc,
 .state-card {
     margin-top: 16rpx;
     color: #6b7280;

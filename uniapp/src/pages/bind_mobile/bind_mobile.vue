@@ -7,6 +7,7 @@
         />
         <!-- #endif -->
     </page-meta>
+    <w-page-nav />
     <view class="bg-white min-h-full flex flex-col items-center px-[40rpx] pt-[40rpx] box-border">
         <view class="w-full">
             <view class="text-2xl font-medium mb-[60rpx]">绑定手机号</view>

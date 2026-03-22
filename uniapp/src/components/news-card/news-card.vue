@@ -1,23 +1,21 @@
 <template>
-    <navigator :url="`/pages/news_detail/news_detail?id=${newsId}`">
-        <view class="news-card flex bg-white px-[20rpx] py-[32rpx]">
-            <view class="mr-[20rpx]" v-if="item.image">
-                <u-image :src="item.image" width="240" height="180"></u-image>
+    <navigator class="news-card" :url="`/pages/news_detail/news_detail?id=${newsId}`">
+        <view class="news-card__inner">
+            <view class="news-card__media" v-if="item.image">
+                <u-image :src="item.image" width="220" height="170" border-radius="20"></u-image>
             </view>
-            <view class="news-card-content flex flex-col justify-between flex-1">
-                <view class="news-card-content-title text-base">{{ item.title }}</view>
-                <view class="news-card-content-intro text-gray-400 text-sm mt-[16rpx]">
-                    {{ item.desc }}
-                </view>
+            <view class="news-card__content">
+                <view class="news-card__tag">婚礼动态</view>
+                <view class="news-card__title">{{ item.title }}</view>
 
-                <view class="text-muted text-xs w-full flex justify-between mt-[12rpx]">
+                <view class="news-card__meta">
                     <view>{{ item.create_time }}</view>
-                    <view class="flex items-center">
+                    <view class="news-card__meta-right">
                         <image
                             src="/static/images/icon/icon_visit.png"
-                            class="w-[30rpx] h-[30rpx]"
+                            class="news-card__visit-icon"
                         ></image>
-                        <view class="ml-[10rpx]">{{ item.click }}</view>
+                        <view class="news-card__visit-text">{{ item.click }}</view>
                     </view>
                 </view>
             </view>
@@ -26,40 +24,96 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
-
-const props = withDefaults(
+withDefaults(
     defineProps<{
         item: any
         newsId: number
     }>(),
     {
         item: {},
-        newsId: ''
+        newsId: 0
     }
 )
 </script>
 
 <style lang="scss" scoped>
 .news-card {
-    border-bottom: 1px solid #f8f8f8;
-    &-content {
-        &-title {
-            -webkit-line-clamp: 2;
-            overflow: hidden;
-            word-break: break-all;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-box-orient: vertical;
-        }
-        &-intro {
-            -webkit-line-clamp: 1;
-            overflow: hidden;
-            word-break: break-all;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-box-orient: vertical;
-        }
+    display: block;
+    margin: 0 24rpx 18rpx;
+}
+
+.news-card__inner {
+    display: flex;
+    gap: 20rpx;
+    padding: 24rpx;
+    border-radius: 28rpx;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1rpx solid rgba(219, 39, 119, 0.1);
+    box-shadow: 0 18rpx 48rpx rgba(31, 41, 55, 0.06);
+}
+
+.news-card__media {
+    flex-shrink: 0;
+}
+
+.news-card__content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.news-card__tag {
+    color: #9d174d;
+    font-size: 20rpx;
+    letter-spacing: 3rpx;
+}
+
+.news-card__title {
+    margin-top: 12rpx;
+    color: #111827;
+    font-size: 30rpx;
+    font-weight: 600;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    word-break: break-all;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+}
+
+.news-card__meta {
+    margin-top: auto;
+    padding-top: 16rpx;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16rpx;
+    color: #9ca3af;
+    font-size: 22rpx;
+}
+
+.news-card__meta-right {
+    display: flex;
+    align-items: center;
+}
+
+.news-card__visit-icon {
+    width: 28rpx;
+    height: 28rpx;
+}
+
+.news-card__visit-text {
+    margin-left: 10rpx;
+}
+
+@media screen and (max-width: 360px) {
+    .news-card__inner {
+        flex-direction: column;
+    }
+
+    .news-card__media {
+        width: 100%;
     }
 }
 </style>

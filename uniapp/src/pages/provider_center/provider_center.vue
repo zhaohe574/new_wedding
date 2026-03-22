@@ -2,13 +2,11 @@
     <page-meta :page-style="$theme.pageStyle">
         <navigation-bar :front-color="$theme.navColor" :background-color="$theme.navBgColor" />
     </page-meta>
+    <w-page-nav />
     <view class="provider-center min-h-screen px-[24rpx] py-[24rpx] box-border">
         <view class="hero-card">
             <view class="hero-card__eyebrow">服务人员工作台</view>
-            <view class="hero-card__title">欢迎进入服务人员中心</view>
-            <view class="hero-card__desc">
-                当前账号已开通服务人员权限。这里已升级为统一服务工作台入口，可继续处理档期维护、接单、改期、履约完成与评价审核。
-            </view>
+            <view class="hero-card__title">服务人员中心</view>
             <view class="hero-card__meta">服务人员 ID：{{ userInfo.provider_id || '-' }}</view>
         </view>
 
@@ -23,7 +21,7 @@
         </view>
 
         <view class="panel-card mt-[24rpx]">
-            <view class="panel-card__title">本阶段已打通的基线能力</view>
+            <view class="panel-card__title">能力概览</view>
             <view class="capability-grid">
                 <view
                     v-for="item in capabilityList"
@@ -33,7 +31,6 @@
                 >
                     <view class="capability-item__title">{{ item.title }}</view>
                     <view class="capability-item__status">{{ item.status }}</view>
-                    <view class="capability-item__desc">{{ item.desc }}</view>
                 </view>
             </view>
         </view>
@@ -43,23 +40,18 @@
             <view class="entry-grid">
                 <view class="entry-item" @click="navigateTo('/pages/provider_schedule/provider_schedule')">
                     <view class="entry-item__title">档期管理</view>
-                    <view class="entry-item__desc">按自然日查看月视图档期，批量设为不可服务或恢复可预约</view>
                 </view>
                 <view class="entry-item" @click="navigateTo('/pages/provider_profile_manage/provider_profile_manage')">
                     <view class="entry-item__title">资料中心</view>
-                    <view class="entry-item__desc">维护资料、证书、作品、套餐，并查看当前待审核版本</view>
                 </view>
                 <view class="entry-item" @click="navigateTo('/pages/provider_order_pending/provider_order_pending')">
                     <view class="entry-item__title">订单工作台</view>
-                    <view class="entry-item__desc">查看全部订单、待履约、改期待处理与评价待审</view>
                 </view>
                 <view class="entry-item" @click="navigateTo('/pages/provider_content_manage/provider_content_manage')">
                     <view class="entry-item__title">内容互动</view>
-                    <view class="entry-item__desc">发布服务动态，处理名下动态评论，跟进互动审核结果</view>
                 </view>
                 <view class="entry-item" @click="navigateTo('/pages/notice_center/notice_center')">
                     <view class="entry-item__title">通知中心</view>
-                    <view class="entry-item__desc">统一查看接单、改期、凭证与评价相关站内通知</view>
                 </view>
             </view>
         </view>
@@ -179,13 +171,6 @@ const navigateTo = (url: string) => {
     font-weight: 600;
 }
 
-.hero-card__desc {
-    margin-top: 16rpx;
-    color: #6b7280;
-    font-size: 26rpx;
-    line-height: 1.8;
-}
-
 .hero-card__meta {
     margin-top: 24rpx;
     color: #831843;
@@ -258,13 +243,6 @@ const navigateTo = (url: string) => {
     font-size: 22rpx;
 }
 
-.capability-item__desc {
-    margin-top: 12rpx;
-    color: #6b7280;
-    font-size: 24rpx;
-    line-height: 1.7;
-}
-
 .entry-grid {
     margin-top: 22rpx;
     display: grid;
@@ -284,10 +262,4 @@ const navigateTo = (url: string) => {
     font-weight: 600;
 }
 
-.entry-item__desc {
-    margin-top: 10rpx;
-    color: #6b7280;
-    font-size: 24rpx;
-    line-height: 1.7;
-}
 </style>

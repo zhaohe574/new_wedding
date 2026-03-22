@@ -7,83 +7,84 @@
         />
         <!-- #endif -->
     </page-meta>
-    <!-- Main Start -->
-    <!-- 头部修改头像 -->
-    <view class="header bg-white pt-[30rpx]">
-        <view class="flex justify-center pb-5">
-            <avatar-upload
-                :modelValue="userInfo?.avatar"
-                file-key="url"
-                :round="true"
-                @update:modelValue="handleAvatarChange"
-            >
-            </avatar-upload>
+    <w-page-nav />
+    <view class="user-data-page w-page-shell">
+        <view class="header">
+            <view class="flex justify-center pb-5">
+                <avatar-upload
+                    :modelValue="userInfo?.avatar"
+                    file-key="url"
+                    :round="true"
+                    @update:modelValue="handleAvatarChange"
+                >
+                </avatar-upload>
+            </view>
         </view>
-    </view>
 
-    <!-- 用户ID -->
-    <view
-        class="item text-nr flex justify-between"
-        @click=";(showUserName = true), (newUsername = userInfo?.username)"
-    >
-        <view class="label">账号</view>
-        <view class="content">{{ userInfo?.account }}</view>
-        <u-icon name="arrow-right" size="22" color="#666"></u-icon>
-    </view>
-
-    <!-- 昵称 -->
-    <view
-        class="item text-nr flex justify-between"
-        @click=";(showNickName = true), (newNickname = userInfo?.nickname)"
-    >
-        <view class="label">昵称</view>
-        <view class="content">{{ userInfo?.nickname }}</view>
-        <u-icon name="arrow-right" size="22" color="#666"></u-icon>
-    </view>
-
-    <!-- 性别 -->
-    <view class="item text-nr flex justify-between" @click="changeSex">
-        <view class="label">性别</view>
-        <view class="content">{{ userInfo?.sex }}</view>
-        <u-icon name="arrow-right" size="22" color="#666"></u-icon>
-    </view>
-
-    <!-- 手机号 -->
-    <view class="item text-nr flex justify-between">
-        <view class="label">手机号</view>
-        <view class="content">{{
-            userInfo?.mobile == '' ? '未绑定手机号' : userInfo?.mobile
-        }}</view>
-
-        <!-- #ifdef MP-WEIXIN -->
-        <u-button
-            open-type="getPhoneNumber"
-            @getphonenumber="getPhoneNumber"
-            type="primary"
-            shape="circle"
-            size="mini"
-            :plain="true"
+        <!-- 用户ID -->
+        <view
+            class="item text-nr flex justify-between"
+            @click=";(showUserName = true), (newUsername = userInfo?.username)"
         >
-            {{ userInfo?.mobile == '' ? '绑定手机号' : '更换手机号' }}
-        </u-button>
-        <!-- #endif -->
-        <!-- #ifndef MP-WEIXIN -->
-        <u-button
-            @click="showMobilePop = true"
-            size="mini"
-            type="primary"
-            shape="circle"
-            :plain="true"
-        >
-            {{ userInfo?.mobile == '' ? '绑定手机号' : '更换手机号' }}
-        </u-button>
-        <!-- #endif -->
-    </view>
+            <view class="label">账号</view>
+            <view class="content">{{ userInfo?.account }}</view>
+            <u-icon name="arrow-right" size="22" color="#666"></u-icon>
+        </view>
 
-    <!-- 注册时间 -->
-    <view class="item text-nr flex justify-between">
-        <view class="label">注册时间</view>
-        <view class="content">{{ userInfo?.create_time }}</view>
+        <!-- 昵称 -->
+        <view
+            class="item text-nr flex justify-between"
+            @click=";(showNickName = true), (newNickname = userInfo?.nickname)"
+        >
+            <view class="label">昵称</view>
+            <view class="content">{{ userInfo?.nickname }}</view>
+            <u-icon name="arrow-right" size="22" color="#666"></u-icon>
+        </view>
+
+        <!-- 性别 -->
+        <view class="item text-nr flex justify-between" @click="changeSex">
+            <view class="label">性别</view>
+            <view class="content">{{ userInfo?.sex }}</view>
+            <u-icon name="arrow-right" size="22" color="#666"></u-icon>
+        </view>
+
+        <!-- 手机号 -->
+        <view class="item text-nr flex justify-between">
+            <view class="label">手机号</view>
+            <view class="content">{{
+                userInfo?.mobile == '' ? '未绑定手机号' : userInfo?.mobile
+            }}</view>
+
+            <!-- #ifdef MP-WEIXIN -->
+            <u-button
+                open-type="getPhoneNumber"
+                @getphonenumber="getPhoneNumber"
+                type="primary"
+                shape="circle"
+                size="mini"
+                :plain="true"
+            >
+                {{ userInfo?.mobile == '' ? '绑定手机号' : '更换手机号' }}
+            </u-button>
+            <!-- #endif -->
+            <!-- #ifndef MP-WEIXIN -->
+            <u-button
+                @click="showMobilePop = true"
+                size="mini"
+                type="primary"
+                shape="circle"
+                :plain="true"
+            >
+                {{ userInfo?.mobile == '' ? '绑定手机号' : '更换手机号' }}
+            </u-button>
+            <!-- #endif -->
+        </view>
+
+        <!-- 注册时间 -->
+        <view class="item text-nr flex justify-between">
+            <view class="label">注册时间</view>
+            <view class="content">{{ userInfo?.create_time }}</view>
+        </view>
     </view>
 
     <!-- 昵称修改组件 -->
@@ -340,6 +341,11 @@ onUnload(() => {})
 <style lang="scss">
 .header {
     width: 100%;
+    padding: 30rpx 0 16rpx;
+    border-radius: 28rpx;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1rpx solid rgba(219, 39, 119, 0.1);
+    box-shadow: 0 18rpx 48rpx rgba(31, 41, 55, 0.06);
 
     image {
         width: 120rpx;
@@ -348,10 +354,17 @@ onUnload(() => {})
     }
 }
 
+.user-data-page {
+    min-height: 100vh;
+}
+
 .item {
-    margin-top: 2rpx;
+    margin-top: 16rpx;
     padding: 30rpx;
-    background-color: #ffffff;
+    border-radius: 24rpx;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1rpx solid rgba(219, 39, 119, 0.1);
+    box-shadow: 0 18rpx 48rpx rgba(31, 41, 55, 0.06);
 
     .label {
         width: 150rpx;

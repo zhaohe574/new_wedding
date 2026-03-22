@@ -4,6 +4,10 @@ export function getWeddingCategories() {
     return request.get({ url: '/wedding/categories' })
 }
 
+export function getWeddingTags() {
+    return request.get({ url: '/wedding/tags' })
+}
+
 export function getWeddingOpenRegionTree() {
     return request.get({ url: '/wedding/openRegionTree' })
 }

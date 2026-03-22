@@ -7,6 +7,7 @@
         />
         <!-- #endif -->
     </page-meta>
+    <w-page-nav />
     <view class="recharge p-[20rpx]">
         <view class="bg-white rounded-[14rpx] p-[40rpx]">
             <view class="text-content">充值金额</view>

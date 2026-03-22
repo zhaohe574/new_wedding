@@ -2,13 +2,14 @@
     <page-meta :page-style="$theme.pageStyle">
         <navigation-bar :front-color="$theme.navColor" :background-color="$theme.navBgColor" />
     </page-meta>
+    <w-page-nav />
     <view class="wedding-order-review-page min-h-screen px-[24rpx] py-[24rpx] box-border">
         <view v-if="loading" class="state-card">正在加载评价信息...</view>
         <template v-else>
             <view class="hero-card">
                 <view class="hero-card__eyebrow">Order Review</view>
                 <view class="hero-card__title">提交服务评价</view>
-                <view class="hero-card__desc">
+                <view class="hero-card__meta">
                     {{ detail.order.provider_name || '-' }} / {{ detail.order.package_name || '-' }} / {{ detail.order.service_date || '-' }}
                 </view>
             </view>
@@ -33,7 +34,6 @@
 
             <view class="panel-card mt-[24rpx]">
                 <view class="panel-card__title">评价图片</view>
-                <view class="panel-card__desc">可上传最多 6 张图片，展示现场效果或服务细节。</view>
                 <view class="image-grid mt-[20rpx]">
                     <view v-for="(item, index) in form.review_images" :key="index" class="image-card">
                         <image class="image-card__img" :src="item" mode="aspectFill" />
@@ -71,7 +71,11 @@
 import { uploadImage } from '@/api/app'
 import { getWeddingOrderDetail, submitWeddingOrderReview } from '@/api/wedding'
 import { useUserStore } from '@/stores/user'
-import { requestWeddingSubscribeMessages } from '@/utils/wedding'
+import {
+    BUYER_REVIEW_SUBSCRIBE_SCENES,
+    mergeWeddingSubscribeScenes,
+    requestWeddingSubscribeMessages
+} from '@/utils/wedding'
 import { onLoad } from '@dcloudio/uni-app'
 import { reactive, ref } from 'vue'
 
@@ -146,7 +150,7 @@ const handleSubmit = async () => {
     }
     submitting.value = true
     try {
-        await requestWeddingSubscribeMessages([212])
+        await requestWeddingSubscribeMessages(mergeWeddingSubscribeScenes(BUYER_REVIEW_SUBSCRIBE_SCENES))
         await submitWeddingOrderReview({
             order_id: orderId.value,
             review_score: form.review_score,
@@ -213,8 +217,7 @@ onLoad(async (options) => {
     font-weight: 600;
 }
 
-.hero-card__desc,
-.panel-card__desc,
+.hero-card__meta,
 .state-card {
     margin-top: 16rpx;
     color: #6b7280;

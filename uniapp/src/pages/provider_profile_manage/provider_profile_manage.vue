@@ -2,13 +2,11 @@
     <page-meta :page-style="$theme.pageStyle">
         <navigation-bar :front-color="$theme.navColor" :background-color="$theme.navBgColor" />
     </page-meta>
+    <w-page-nav />
     <view class="provider-profile-manage-page min-h-screen px-[24rpx] py-[24rpx] box-border">
         <view class="hero-card">
             <view class="hero-card__eyebrow">Provider Profile Center</view>
             <view class="hero-card__title">资料中心</view>
-            <view class="hero-card__desc">
-                统一维护服务人员资料、证书、作品与套餐。本轮所有改动均先提交审核，审核通过后才会替换线上正式数据。
-            </view>
         </view>
 
         <scroll-view class="tab-scroll mt-[24rpx]" scroll-x>
@@ -303,13 +301,6 @@ onShow(async () => {
     color: #1f2937;
     font-size: 44rpx;
     font-weight: 600;
-}
-
-.hero-card__desc {
-    margin-top: 16rpx;
-    color: #6b7280;
-    font-size: 26rpx;
-    line-height: 1.8;
 }
 
 .tab-scroll {

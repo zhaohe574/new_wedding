@@ -7,9 +7,13 @@
         />
         <!-- #endif -->
     </page-meta>
-    <view class="as-us flex flex-1 flex-col items-center">
-        <image :src="appStore.getWebsiteConfig.shop_logo" mode="" class="img"></image>
-        <view class="text-content mt-[20rpx]">当前版本{{ appStore.config.version }}</view>
+    <w-page-nav />
+    <view class="as-us w-page-shell">
+        <view class="about-card">
+            <image :src="appStore.getWebsiteConfig.shop_logo" mode="" class="img"></image>
+            <view class="about-card__title">{{ appStore.getWebsiteConfig.shop_name || '婚庆服务预约' }}</view>
+            <view class="about-card__version">当前版本 {{ appStore.config.version }}</view>
+        </view>
     </view>
 </template>
 
@@ -20,11 +24,35 @@ const appStore = useAppStore()
 
 <style lang="scss" scoped>
 .as-us {
-    .img {
-        width: 160rpx;
-        height: 160rpx;
-        border-radius: 20rpx;
-        margin-top: 96rpx;
-    }
+    min-height: 100vh;
+}
+
+.about-card {
+    display: grid;
+    justify-items: center;
+    gap: 18rpx;
+    margin-top: 120rpx;
+    padding: 36rpx 28rpx;
+    border-radius: 32rpx;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1rpx solid rgba(219, 39, 119, 0.1);
+    box-shadow: 0 18rpx 48rpx rgba(31, 41, 55, 0.06);
+}
+
+.img {
+    width: 160rpx;
+    height: 160rpx;
+    border-radius: 28rpx;
+}
+
+.about-card__title {
+    color: #111827;
+    font-size: 34rpx;
+    font-weight: 600;
+}
+
+.about-card__version {
+    color: #6b7280;
+    font-size: 24rpx;
 }
 </style>

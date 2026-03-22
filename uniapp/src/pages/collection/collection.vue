@@ -7,6 +7,7 @@
         />
         <!-- #endif -->
     </page-meta>
+    <w-page-nav />
     <z-paging
         ref="paging"
         v-model="collectData"

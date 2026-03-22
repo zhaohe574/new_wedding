@@ -2,13 +2,11 @@
     <page-meta :page-style="$theme.pageStyle">
         <navigation-bar :front-color="$theme.navColor" :background-color="$theme.navBgColor" />
     </page-meta>
+    <w-page-nav />
     <view class="provider-schedule-page min-h-screen px-[24rpx] py-[24rpx] box-border">
         <view class="hero-card">
             <view class="hero-card__eyebrow">Provider Schedule</view>
             <view class="hero-card__title">自然日档期管理</view>
-            <view class="hero-card__desc">
-                仅支持维护本人名下档期。可预约与不可服务可手动切换，已锁定、已占用仅支持查看，释放仍由订单流转自动完成。
-            </view>
             <view class="hero-card__meta">
                 {{ providerName }} · {{ monthLabel }} · 本月可编辑 {{ Number(monthData.summary?.editable || 0) }} 天
             </view>
@@ -359,13 +357,6 @@ function shiftMonth(month: string, offset: number) {
     color: #1f2937;
     font-size: 44rpx;
     font-weight: 600;
-}
-
-.hero-card__desc {
-    margin-top: 16rpx;
-    color: #6b7280;
-    font-size: 26rpx;
-    line-height: 1.8;
 }
 
 .hero-card__meta {

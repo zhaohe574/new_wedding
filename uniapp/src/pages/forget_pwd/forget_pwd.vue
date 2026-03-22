@@ -7,11 +7,13 @@
         />
         <!-- #endif -->
     </page-meta>
-    <view
-        class="register bg-white min-h-full flex flex-col items-center px-[40rpx] pt-[100rpx] box-border"
-    >
-        <view class="w-full">
-            <view class="text-2xl font-medium mb-[60rpx]">忘记登录密码</view>
+    <w-page-nav />
+    <view class="forget-page w-page-shell w-page-shell--auth">
+        <view class="w-auth-brand">
+            <view class="w-auth-brand__title">重置密码</view>
+            <view class="w-auth-brand__hint">通过短信验证码找回登录密码</view>
+        </view>
+        <view class="forget-page__panel w-auth-panel">
             <u-form borderBottom :label-width="150">
                 <u-form-item label="手机号" borderBottom>
                     <u-input
@@ -62,7 +64,7 @@
                     />
                 </u-form-item>
             </u-form>
-            <view class="mt-[100rpx]">
+            <view class="mt-[72rpx]">
                 <u-button type="primary" shape="circle" @click="handleConfirm"> 确定 </u-button>
             </view>
         </view>
@@ -112,8 +114,13 @@ const handleConfirm = async () => {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 page {
     height: 100%;
+}
+
+.forget-page__panel {
+    width: 100%;
+    max-width: 680rpx;
 }
 </style>

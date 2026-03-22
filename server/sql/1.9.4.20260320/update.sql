@@ -888,4 +888,86 @@ CREATE TABLE IF NOT EXISTS `la_notice_wecom_log` (
   INDEX `idx_provider_id` (`provider_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='企业微信通知日志表';
 
+UPDATE `la_decorate_tabbar`
+SET `name` = '首页',
+    `selected` = 'resource/image/adminapi/default/tabbar_home_sel.png',
+    `unselected` = 'resource/image/adminapi/default/tabbar_home.png',
+    `link` = '{"path":"\/pages\/index\/index","name":"首页","type":"shop","canTab":"1"}',
+    `is_show` = 1,
+    `update_time` = UNIX_TIMESTAMP()
+WHERE `id` = 1;
+
+INSERT INTO `la_decorate_tabbar` (`id`, `name`, `selected`, `unselected`, `link`, `is_show`, `create_time`, `update_time`)
+SELECT 1,
+       '首页',
+       'resource/image/adminapi/default/tabbar_home_sel.png',
+       'resource/image/adminapi/default/tabbar_home.png',
+       '{"path":"\/pages\/index\/index","name":"首页","type":"shop","canTab":"1"}',
+       1,
+       UNIX_TIMESTAMP(),
+       UNIX_TIMESTAMP()
+WHERE NOT EXISTS (
+    SELECT 1 FROM `la_decorate_tabbar` WHERE `id` = 1
+);
+
+UPDATE `la_decorate_tabbar`
+SET `name` = '动态',
+    `selected` = 'resource/image/adminapi/default/tabbar_text_sel.png',
+    `unselected` = 'resource/image/adminapi/default/tabbar_text.png',
+    `link` = '{"path":"\/pages\/news\/news","name":"动态","type":"shop","canTab":"1"}',
+    `is_show` = 1,
+    `update_time` = UNIX_TIMESTAMP()
+WHERE `id` = 2;
+
+INSERT INTO `la_decorate_tabbar` (`id`, `name`, `selected`, `unselected`, `link`, `is_show`, `create_time`, `update_time`)
+SELECT 2,
+       '动态',
+       'resource/image/adminapi/default/tabbar_text_sel.png',
+       'resource/image/adminapi/default/tabbar_text.png',
+       '{"path":"\/pages\/news\/news","name":"动态","type":"shop","canTab":"1"}',
+       1,
+       UNIX_TIMESTAMP(),
+       UNIX_TIMESTAMP()
+WHERE NOT EXISTS (
+    SELECT 1 FROM `la_decorate_tabbar` WHERE `id` = 2
+);
+
+UPDATE `la_decorate_tabbar`
+SET `name` = '我的',
+    `selected` = 'resource/image/adminapi/default/tabbar_me_sel.png',
+    `unselected` = 'resource/image/adminapi/default/tabbar_me.png',
+    `link` = '{"path":"\/pages\/user\/user","name":"我的","type":"shop","canTab":"1"}',
+    `is_show` = 1,
+    `update_time` = UNIX_TIMESTAMP()
+WHERE `id` = 3;
+
+INSERT INTO `la_decorate_tabbar` (`id`, `name`, `selected`, `unselected`, `link`, `is_show`, `create_time`, `update_time`)
+SELECT 3,
+       '我的',
+       'resource/image/adminapi/default/tabbar_me_sel.png',
+       'resource/image/adminapi/default/tabbar_me.png',
+       '{"path":"\/pages\/user\/user","name":"我的","type":"shop","canTab":"1"}',
+       1,
+       UNIX_TIMESTAMP(),
+       UNIX_TIMESTAMP()
+WHERE NOT EXISTS (
+    SELECT 1 FROM `la_decorate_tabbar` WHERE `id` = 3
+);
+
+UPDATE `la_config`
+SET `value` = '{"default_color":"#9ca3af","selected_color":"#db2777"}',
+    `update_time` = UNIX_TIMESTAMP()
+WHERE `type` = 'tabbar'
+  AND `name` = 'style';
+
+INSERT INTO `la_config` (`type`, `name`, `value`, `create_time`, `update_time`)
+SELECT 'tabbar',
+       'style',
+       '{"default_color":"#9ca3af","selected_color":"#db2777"}',
+       UNIX_TIMESTAMP(),
+       UNIX_TIMESTAMP()
+WHERE NOT EXISTS (
+    SELECT 1 FROM `la_config` WHERE `type` = 'tabbar' AND `name` = 'style'
+);
+
 SET FOREIGN_KEY_CHECKS=1;

@@ -99,7 +99,7 @@ return [
     // 后台装修
     'decorate' => [
         // 底部导航栏样式设置
-        'tabbar_style' => ['default_color' => '#999999', 'selected_color' => '#c455ff'],
+        'tabbar_style' => ['default_color' => '#9ca3af', 'selected_color' => '#db2777'],
     ],
 
     // 婚庆业务基线配置

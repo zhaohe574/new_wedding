@@ -7,11 +7,13 @@
         />
         <!-- #endif -->
     </page-meta>
-    <view
-        class="register bg-white min-h-full flex flex-col items-center px-[40rpx] pt-[40rpx] box-border"
-    >
-        <view class="w-full">
-            <view class="text-2xl font-medium mb-[60rpx]">注册新账号</view>
+    <w-page-nav />
+    <view class="register-page w-page-shell w-page-shell--auth">
+        <view class="w-auth-brand">
+            <view class="w-auth-brand__title">注册账号</view>
+            <view class="w-auth-brand__hint">创建账号后继续婚庆预约</view>
+        </view>
+        <view class="register-page__panel w-auth-panel">
 
             <view
                 class="px-[18rpx] border border-solid border-lightc border-light rounded-[10rpx] h-[100rpx] items-center flex"
@@ -143,8 +145,13 @@ const accountRegister = async () => {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 page {
     height: 100%;
+}
+
+.register-page__panel {
+    width: 100%;
+    max-width: 680rpx;
 }
 </style>

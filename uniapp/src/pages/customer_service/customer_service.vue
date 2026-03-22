@@ -7,6 +7,7 @@
         />
         <!-- #endif -->
     </page-meta>
+    <w-page-nav />
     <view class="customer-service">
         <view v-for="(item, index) in state.pages" :key="index">
             <template v-if="item.name == 'customer-service'">

@@ -1,5 +1,6 @@
 <template>
 	<view class="content">
+		<w-page-nav title="头像裁剪" />
 		<view class="cropper-wrapper" :style="{ height: cropperOpt.height + 'px' }">
 			<canvas
 				class="cropper"
@@ -124,8 +125,10 @@ export default {
 	},
 	onLoad(option) {
 		let rectInfo = uni.getSystemInfoSync();
+		const navbarHeight = rectInfo.platform == 'ios' ? 44 : 48;
+		const pageNavHeight = rectInfo.statusBarHeight + navbarHeight;
 		this.width = rectInfo.windowWidth;
-		this.height = rectInfo.windowHeight - this.bottomNavHeight;
+		this.height = rectInfo.windowHeight - this.bottomNavHeight - pageNavHeight;
 		this.cropperOpt.width = this.width;
 		this.cropperOpt.height = this.height;
 		this.cropperOpt.pixelRatio = rectInfo.pixelRatio;

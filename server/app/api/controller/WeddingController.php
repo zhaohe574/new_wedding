@@ -76,7 +76,13 @@ class WeddingController extends BaseApiController
         return $this->data(WeddingTradeService::getProviderLists(
             (int)$params['category_id'],
             trim((string)$params['district_code']),
-            trim((string)$params['service_date'])
+            trim((string)$params['service_date']),
+            array_values(array_unique(array_filter(array_map(
+                'intval',
+                explode(',', trim((string)($params['tag_ids'] ?? '')))
+            )))),
+            trim((string)($params['keyword'] ?? '')),
+            trim((string)($params['price_sort'] ?? ''))
         ));
     }
 

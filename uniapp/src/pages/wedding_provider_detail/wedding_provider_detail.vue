@@ -2,13 +2,11 @@
     <page-meta :page-style="$theme.pageStyle">
         <navigation-bar :front-color="$theme.navColor" :background-color="$theme.navBgColor" />
     </page-meta>
+    <w-page-nav />
     <view class="wedding-provider-detail-page min-h-screen px-[24rpx] py-[24rpx] box-border">
         <view class="hero-card">
             <view class="hero-card__eyebrow">Provider Detail</view>
-            <view class="hero-card__title">服务人员详情与套餐选择</view>
-            <view class="hero-card__desc">
-                当前页面只展示所选县区与服务日期下可售套餐，未命中地区价格或当前不可约的套餐不会展示。
-            </view>
+            <view class="hero-card__title">服务人员详情</view>
             <view class="hero-card__meta">{{ selectionSummary }}</view>
         </view>
 
@@ -34,20 +32,17 @@
                 <view class="schedule-badge" :class="`schedule-badge--${detail.schedule.status || 'unknown'}`">
                     {{ detail.schedule.status_desc || '-' }}
                 </view>
-                <view class="panel-card__desc">服务日期：{{ selectedServiceDate }}</view>
+                <view class="panel-card__meta">服务日期：{{ selectedServiceDate }}</view>
             </view>
 
             <view class="panel-card mt-[24rpx]">
                 <view class="panel-card__title">服务动态</view>
-                <view class="panel-card__desc">
-                    查看该服务人员已审核通过的服务动态与公开评论，帮助你更直观地判断服务风格与近期作品状态。
-                </view>
                 <button class="secondary-btn mt-[20rpx]" @click="handleViewPosts">查看服务动态</button>
             </view>
 
             <view class="panel-card mt-[24rpx]">
                 <view class="panel-card__title">可售套餐</view>
-                <view v-if="!detail.packages.length" class="panel-card__desc">
+                <view v-if="!detail.packages.length" class="panel-card__meta">
                     当前地区与日期下暂无可售套餐，请返回上一步调整条件。
                 </view>
                 <view v-else class="package-grid">
@@ -86,10 +81,12 @@
 import { getWeddingProviderDetail } from '@/api/wedding'
 import {
     buildWeddingSelectionSummary,
-    getSelectedRegion,
-    getSelectedServiceDate,
+    buildWeddingTradeQueryUrl,
     getWeddingOrderDraft,
-    patchWeddingOrderDraft
+    hasRequiredWeddingTradeQuery,
+    normalizeWeddingTradeQuery,
+    patchWeddingOrderDraft,
+    type WeddingTradeQuery
 } from '@/utils/wedding'
 import { onLoad } from '@dcloudio/uni-app'
 import { computed, reactive, ref } from 'vue'
@@ -98,9 +95,7 @@ const defaultAvatar = '/static/images/user/default_avatar.png'
 const loading = ref(false)
 const providerId = ref(0)
 const selectedPackageId = ref(0)
-const selectedServiceDate = ref('')
-const selectionSummary = ref('')
-const selectedRegion = ref<Record<string, any>>({})
+const tradeQuery = ref<WeddingTradeQuery>(normalizeWeddingTradeQuery())
 const detail = reactive<any>({
     provider: {},
     category: {},
@@ -109,6 +104,8 @@ const detail = reactive<any>({
     packages: []
 })
 
+const selectedServiceDate = computed(() => tradeQuery.value.service_date)
+const selectionSummary = computed(() => buildWeddingSelectionSummary(tradeQuery.value))
 const tagSummary = computed(() => (detail.tags || []).map((item: any) => item.name).join('、'))
 
 const formatPrice = (value: number) => Number(value || 0).toFixed(2)
@@ -124,12 +121,12 @@ const getMatchLevelText = (value: string) => {
 
 const redirectToList = () => {
     uni.redirectTo({
-        url: '/pages/wedding_provider_list/wedding_provider_list'
+        url: buildWeddingTradeQueryUrl('/pages/wedding_provider_list/wedding_provider_list', tradeQuery.value)
     })
 }
 
 const loadDetail = async () => {
-    if (!providerId.value || !selectedRegion.value.district_code || !selectedServiceDate.value) {
+    if (!providerId.value || !hasRequiredWeddingTradeQuery(tradeQuery.value)) {
         uni.showToast({ title: '请先选择地区和服务日期', icon: 'none' })
         setTimeout(() => {
             redirectToList()
@@ -141,8 +138,8 @@ const loadDetail = async () => {
     try {
         const data = await getWeddingProviderDetail({
             provider_id: providerId.value,
-            district_code: selectedRegion.value.district_code,
-            service_date: selectedServiceDate.value
+            district_code: tradeQuery.value.district_code,
+            service_date: tradeQuery.value.service_date
         })
         Object.assign(detail, data || {})
         const draft = getWeddingOrderDraft()
@@ -168,7 +165,7 @@ const handleGoTemplate = () => {
         package_id: selectedPackageId.value
     })
     uni.navigateTo({
-        url: '/pages/wedding_template_form/wedding_template_form'
+        url: buildWeddingTradeQueryUrl('/pages/wedding_template_form/wedding_template_form', tradeQuery.value)
     })
 }
 
@@ -180,9 +177,7 @@ const handleViewPosts = () => {
 
 onLoad(async (options) => {
     providerId.value = Number(options?.provider_id || 0)
-    selectedServiceDate.value = getSelectedServiceDate()
-    selectedRegion.value = getSelectedRegion()
-    selectionSummary.value = buildWeddingSelectionSummary()
+    tradeQuery.value = normalizeWeddingTradeQuery((options || {}) as Record<string, any>)
     if (!providerId.value) {
         uni.showToast({ title: '服务人员参数缺失', icon: 'none' })
         setTimeout(() => {
@@ -231,9 +226,8 @@ onLoad(async (options) => {
     font-weight: 600;
 }
 
-.hero-card__desc,
 .hero-card__meta,
-.panel-card__desc,
+.panel-card__meta,
 .state-card {
     margin-top: 16rpx;
     color: #6b7280;

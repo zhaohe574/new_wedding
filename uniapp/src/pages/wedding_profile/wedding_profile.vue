@@ -2,13 +2,11 @@
     <page-meta :page-style="$theme.pageStyle">
         <navigation-bar :front-color="$theme.navColor" :background-color="$theme.navBgColor" />
     </page-meta>
+    <w-page-nav />
     <view class="wedding-profile-page min-h-screen px-[24rpx] py-[24rpx] box-border">
         <view class="hero-card">
             <view class="hero-card__eyebrow">Wedding Profile</view>
             <view class="hero-card__title">婚礼基础档案</view>
-            <view class="hero-card__desc">
-                这里沉淀婚礼日期、宴会地区、预算和联系人。后续进入下单链路时，会优先复用这里的默认值。
-            </view>
         </view>
 
         <view class="panel-card mt-[24rpx]">
@@ -256,13 +254,6 @@ getData()
     color: #1f2937;
     font-size: 44rpx;
     font-weight: 600;
-}
-
-.hero-card__desc {
-    margin-top: 16rpx;
-    color: #6b7280;
-    font-size: 26rpx;
-    line-height: 1.8;
 }
 
 .panel-card {

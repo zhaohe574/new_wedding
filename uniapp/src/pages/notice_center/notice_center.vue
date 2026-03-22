@@ -2,6 +2,7 @@
     <page-meta :page-style="$theme.pageStyle">
         <navigation-bar :front-color="$theme.navColor" :background-color="$theme.navBgColor" />
     </page-meta>
+    <w-page-nav />
     <z-paging
         ref="paging"
         v-model="noticeLists"
@@ -11,8 +12,7 @@
         <view class="notice-center-page min-h-screen px-[24rpx] py-[24rpx] box-border">
             <view class="hero-card">
                 <view class="hero-card__eyebrow">Notice Center</view>
-                <view class="hero-card__title">站内通知中心</view>
-                <view class="hero-card__desc">统一查看支付、改期、履约与评价相关的最新站内提醒。</view>
+                <view class="hero-card__title">通知中心</view>
                 <view class="hero-actions">
                     <view class="hero-badge">未读 {{ unreadCount }}</view>
                     <button class="hero-btn" @click="handleReadAll">全部已读</button>
@@ -143,7 +143,6 @@ const handleReadAll = async () => {
     font-weight: 600;
 }
 
-.hero-card__desc,
 .state-card {
     margin-top: 16rpx;
     color: #6b7280;

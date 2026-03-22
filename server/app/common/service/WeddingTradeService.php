@@ -10,8 +10,19 @@ use app\common\model\wedding\ServiceTag;
 
 class WeddingTradeService
 {
-    public static function getProviderLists(int $categoryId, string $districtCode, string $serviceDate): array
+    public static function getProviderLists(
+        int $categoryId,
+        string $districtCode,
+        string $serviceDate,
+        array $tagIds = [],
+        string $keyword = '',
+        string $priceSort = ''
+    ): array
     {
+        $tagIds = self::normalizeTagIds($tagIds);
+        $keyword = trim($keyword);
+        $priceSort = in_array($priceSort, ['asc', 'desc'], true) ? $priceSort : '';
+
         $providers = self::getActiveProviderQuery()
             ->where('provider.category_id', $categoryId)
             ->order(['provider.is_recommend' => 'desc', 'provider.sort' => 'desc', 'provider.id' => 'desc'])
@@ -20,6 +31,10 @@ class WeddingTradeService
 
         $lists = [];
         foreach ($providers as $provider) {
+            if (!self::matchProviderTags($provider, $tagIds) || !self::matchProviderKeyword($provider, $keyword)) {
+                continue;
+            }
+
             $saleContext = self::buildProviderSaleContext($provider, $districtCode, $serviceDate);
             if (!$saleContext['is_sellable']) {
                 continue;
@@ -39,6 +54,24 @@ class WeddingTradeService
                 'matched_package_count' => count($saleContext['packages']),
                 'price_match_level' => (string)($bestPackage['price_match_level'] ?? ''),
             ];
+        }
+
+        if ($priceSort !== '') {
+            usort($lists, function (array $left, array $right) use ($priceSort): int {
+                if ($left['min_price'] === $right['min_price']) {
+                    if ($left['recommend'] === $right['recommend']) {
+                        if ($left['sort'] === $right['sort']) {
+                            return $right['provider_id'] <=> $left['provider_id'];
+                        }
+                        return $right['sort'] <=> $left['sort'];
+                    }
+                    return $right['recommend'] <=> $left['recommend'];
+                }
+
+                return $priceSort === 'asc'
+                    ? ($left['min_price'] <=> $right['min_price'])
+                    : ($right['min_price'] <=> $left['min_price']);
+            });
         }
 
         return $lists;
@@ -240,7 +273,7 @@ class WeddingTradeService
 
     private static function getTagsByIds(array $tagIds): array
     {
-        $tagIds = array_values(array_unique(array_filter(array_map('intval', $tagIds))));
+        $tagIds = self::normalizeTagIds($tagIds);
         if (empty($tagIds)) {
             return [];
         }
@@ -290,5 +323,33 @@ class WeddingTradeService
         }
 
         return FileService::getFileUrl($avatar);
+    }
+
+    private static function normalizeTagIds(array $tagIds): array
+    {
+        return array_values(array_unique(array_filter(array_map('intval', $tagIds))));
+    }
+
+    private static function matchProviderTags(array $provider, array $selectedTagIds): bool
+    {
+        if (empty($selectedTagIds)) {
+            return true;
+        }
+
+        $providerTagIds = self::normalizeTagIds($provider['tag_ids'] ?? []);
+        return !empty(array_intersect($providerTagIds, $selectedTagIds));
+    }
+
+    private static function matchProviderKeyword(array $provider, string $keyword): bool
+    {
+        if ($keyword === '') {
+            return true;
+        }
+
+        $keyword = mb_strtolower($keyword);
+        $name = mb_strtolower((string)($provider['name'] ?? ''));
+        $summary = mb_strtolower((string)($provider['intro'] ?? ''));
+
+        return mb_stripos($name, $keyword) !== false || mb_stripos($summary, $keyword) !== false;
     }
 }

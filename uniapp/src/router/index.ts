@@ -10,7 +10,7 @@ import wechatOa from '@/utils/wechat'
 // #endif
 import cache from '@/utils/cache'
 import { BACK_URL } from '@/enums/constantEnums'
-import { hasWeddingTradeSelection } from '@/utils/wedding'
+import { buildWeddingTradeQueryUrl, hasRequiredWeddingTradeQuery, normalizeWeddingTradeQuery } from '@/utils/wedding'
 
 const router = createRouter({
     routes: [
@@ -131,9 +131,12 @@ router.beforeEach(async (to) => {
         return
     }
 
-    if (!hasWeddingTradeSelection()) {
+    const tradeQuery = normalizeWeddingTradeQuery((to.query || {}) as Record<string, any>)
+    if (!hasRequiredWeddingTradeQuery(tradeQuery)) {
         uni.showToast({ title: '请先选择地区与服务日期', icon: 'none' })
-        return '/pages/wedding_region/wedding_region'
+        return buildWeddingTradeQueryUrl('/pages/wedding_region/wedding_region', {
+            category_id: tradeQuery.category_id
+        })
     }
 })
 

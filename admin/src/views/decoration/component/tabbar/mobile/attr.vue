@@ -16,14 +16,14 @@
                 <color-picker
                     class="max-w-[400px]"
                     v-model="data.style.default_color"
-                    default-color="#999999"
+                    default-color="#9ca3af"
                 />
             </el-form-item>
             <el-form-item label="选中颜色" style="margin-bottom: 0">
                 <color-picker
                     class="max-w-[400px]"
                     v-model="data.style.selected_color"
-                    default-color="#4173ff"
+                    default-color="#db2777"
                 />
             </el-form-item>
         </el-card>
