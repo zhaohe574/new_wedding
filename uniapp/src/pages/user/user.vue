@@ -111,6 +111,14 @@ const entryCards = computed(() => {
         cardClass: ''
     })
 
+    cards.push({
+        meta: 'Notice Center',
+        title: '通知中心',
+        desc: '统一查看订单、改期、支付与评价的站内提醒',
+        url: '/pages/notice_center/notice_center',
+        cardClass: ''
+    })
+
     if (userInfo.value?.can_enter_provider_center && Number(displayConfig.provider_center_enabled ?? 0) === 1) {
         cards.push({
             meta: 'Provider Center',

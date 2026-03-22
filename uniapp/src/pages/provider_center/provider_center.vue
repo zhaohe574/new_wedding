@@ -7,7 +7,7 @@
             <view class="hero-card__eyebrow">服务人员工作台</view>
             <view class="hero-card__title">欢迎进入服务人员中心</view>
             <view class="hero-card__desc">
-                当前账号已开通服务人员权限。后续将从这里统一处理资料维护、档期管理、订单处理与内容发布。
+                当前账号已开通服务人员权限。这里已升级为统一订单工作台入口，可继续处理接单、改期、履约完成与评价审核。
             </view>
             <view class="hero-card__meta">服务人员 ID：{{ userInfo.provider_id || '-' }}</view>
         </view>
@@ -42,8 +42,12 @@
             <view class="panel-card__title">快捷入口</view>
             <view class="entry-grid">
                 <view class="entry-item" @click="navigateTo('/pages/provider_order_pending/provider_order_pending')">
-                    <view class="entry-item__title">待确认订单</view>
-                    <view class="entry-item__desc">查看并处理服务人员待确认订单</view>
+                    <view class="entry-item__title">订单工作台</view>
+                    <view class="entry-item__desc">查看全部订单、待履约、改期待处理与评价待审</view>
+                </view>
+                <view class="entry-item" @click="navigateTo('/pages/notice_center/notice_center')">
+                    <view class="entry-item__title">通知中心</view>
+                    <view class="entry-item__desc">统一查看接单、改期、凭证与评价相关站内通知</view>
                 </view>
                 <view class="entry-item" @click="navigateTo('/pages/wedding_order_list/wedding_order_list')">
                     <view class="entry-item__title">用户订单视角</view>

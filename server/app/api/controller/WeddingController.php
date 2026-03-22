@@ -136,6 +136,37 @@ class WeddingController extends BaseApiController
         return $this->success('线下凭证提交成功', [], 1, 1);
     }
 
+    public function orderRescheduleApply(): Json
+    {
+        $params = (new WeddingOrderValidate())->post()->goCheck('rescheduleApply');
+        ServiceOrderService::rescheduleApplyByUser(
+            $this->userId,
+            (int)$params['order_id'],
+            trim((string)$params['new_service_date']),
+            trim((string)($params['apply_reason'] ?? ''))
+        );
+        return $this->success('改期申请已提交', [], 1, 1);
+    }
+
+    public function orderReviewSubmit(): Json
+    {
+        $params = (new WeddingOrderValidate())->post()->goCheck('reviewSubmit');
+        ServiceOrderService::submitReviewByUser(
+            $this->userId,
+            (int)$params['order_id'],
+            (int)$params['review_score'],
+            trim((string)($params['review_content'] ?? '')),
+            $params['review_images'] ?? []
+        );
+        return $this->success('评价提交成功', [], 1, 1);
+    }
+
+    public function providerOrderLists(): Json
+    {
+        $params = (new WeddingOrderValidate())->get()->goCheck('providerOrderLists');
+        return $this->data(ServiceOrderService::getProviderOrderLists($this->userId, $params));
+    }
+
     public function providerOrderPendingLists(): Json
     {
         $params = (new WeddingOrderValidate())->get()->goCheck('providerPendingLists');
@@ -164,5 +195,36 @@ class WeddingController extends BaseApiController
             trim((string)$params['reject_reason'])
         );
         return $this->success('拒单成功', [], 1, 1);
+    }
+
+    public function providerOrderRescheduleHandle(): Json
+    {
+        $params = (new WeddingOrderValidate())->post()->goCheck('providerRescheduleHandle');
+        ServiceOrderService::providerHandleReschedule(
+            $this->userId,
+            (int)$params['change_id'],
+            (int)$params['audit_status'],
+            trim((string)($params['audit_remark'] ?? ''))
+        );
+        return $this->success('改期申请处理成功', [], 1, 1);
+    }
+
+    public function providerOrderServiceComplete(): Json
+    {
+        $params = (new WeddingOrderValidate())->post()->goCheck('providerServiceComplete');
+        ServiceOrderService::providerCompleteService($this->userId, (int)$params['order_id']);
+        return $this->success('履约状态已更新', [], 1, 1);
+    }
+
+    public function providerOrderReviewAudit(): Json
+    {
+        $params = (new WeddingOrderValidate())->post()->goCheck('providerReviewAudit');
+        ServiceOrderService::providerAuditReview(
+            $this->userId,
+            (int)$params['order_id'],
+            (int)$params['audit_status'],
+            trim((string)($params['audit_remark'] ?? ''))
+        );
+        return $this->success('评价审核成功', [], 1, 1);
     }
 }

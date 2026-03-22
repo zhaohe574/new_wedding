@@ -245,9 +245,18 @@
             }
         },
         {
+            "path": "pages/wedding_order_review/wedding_order_review",
+            "style": {
+                "navigationBarTitleText": "订单评价"
+            },
+            "meta": {
+                "auth": true
+            }
+        },
+        {
             "path": "pages/provider_order_pending/provider_order_pending",
             "style": {
-                "navigationBarTitleText": "待确认订单"
+                "navigationBarTitleText": "订单工作台"
             },
             "meta": {
                 "auth": true
@@ -256,7 +265,16 @@
         {
             "path": "pages/provider_order_detail/provider_order_detail",
             "style": {
-                "navigationBarTitleText": "订单处理"
+                "navigationBarTitleText": "服务订单详情"
+            },
+            "meta": {
+                "auth": true
+            }
+        },
+        {
+            "path": "pages/notice_center/notice_center",
+            "style": {
+                "navigationBarTitleText": "通知中心"
             },
             "meta": {
                 "auth": true

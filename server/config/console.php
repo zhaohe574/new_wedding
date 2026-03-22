@@ -9,5 +9,7 @@ return [
         'crontab' => 'app\common\command\Crontab',
         // 退款查询
         'query_refund' => 'app\common\command\QueryRefund',
+        // 婚庆订单超时关闭
+        'service_order_timeout_close' => 'app\common\command\ServiceOrderTimeoutClose',
     ],
 ];

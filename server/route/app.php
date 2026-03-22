@@ -19,10 +19,19 @@ Route::get('api/wedding/order/lists', 'api/Wedding/orderLists');
 Route::get('api/wedding/order/detail', 'api/Wedding/orderDetail');
 Route::post('api/wedding/order/cancel', 'api/Wedding/orderCancel');
 Route::post('api/wedding/order/offlineVoucher', 'api/Wedding/orderOfflineVoucher');
+Route::post('api/wedding/order/rescheduleApply', 'api/Wedding/orderRescheduleApply');
+Route::post('api/wedding/order/reviewSubmit', 'api/Wedding/orderReviewSubmit');
+Route::get('api/wedding/provider/order/lists', 'api/Wedding/providerOrderLists');
 Route::get('api/wedding/provider/order/pendingLists', 'api/Wedding/providerOrderPendingLists');
 Route::get('api/wedding/provider/order/detail', 'api/Wedding/providerOrderDetail');
 Route::post('api/wedding/provider/order/accept', 'api/Wedding/providerOrderAccept');
 Route::post('api/wedding/provider/order/reject', 'api/Wedding/providerOrderReject');
+Route::post('api/wedding/provider/order/rescheduleHandle', 'api/Wedding/providerOrderRescheduleHandle');
+Route::post('api/wedding/provider/order/serviceComplete', 'api/Wedding/providerOrderServiceComplete');
+Route::post('api/wedding/provider/order/reviewAudit', 'api/Wedding/providerOrderReviewAudit');
+Route::get('api/notice/lists', 'api/Notice/lists');
+Route::post('api/notice/read', 'api/Notice/read');
+Route::post('api/notice/readAll', 'api/Notice/readAll');
 
 // 管理后台
 Route::rule('admin/:any', function () {

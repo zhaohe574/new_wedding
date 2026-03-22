@@ -215,3 +215,31 @@ export function detailServiceOrder(params: any) {
 export function offlineVoucherAuditServiceOrder(params: any) {
     return request.post({ url: '/wedding.service_order/offlineVoucherAudit', params })
 }
+
+export function getServiceOrderChangeLists(params?: any) {
+    return request.get({ url: '/wedding.service_order_change/lists', params })
+}
+
+export function detailServiceOrderChange(params: any) {
+    return request.get({ url: '/wedding.service_order_change/detail', params })
+}
+
+export function handleServiceOrderChange(params: any) {
+    return request.post({ url: '/wedding.service_order_change/handle', params })
+}
+
+export function getServiceOrderReviewLists(params?: any) {
+    return request.get({ url: '/wedding.service_order_review/lists', params })
+}
+
+export function detailServiceOrderReview(params: any) {
+    return request.get({ url: '/wedding.service_order_review/detail', params })
+}
+
+export function auditServiceOrderReview(params: any) {
+    return request.post({ url: '/wedding.service_order_review/audit', params })
+}
+
+export function getWeddingDashboardOverview() {
+    return request.get({ url: '/wedding.wedding_dashboard/overview' })
+}

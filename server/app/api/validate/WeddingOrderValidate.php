@@ -24,6 +24,15 @@ class WeddingOrderValidate extends BaseValidate
         'voucher_images' => 'require|array|checkVoucherImages',
         'voucher_remark' => 'max:500',
         'reject_reason' => 'require|max:500',
+        'change_id' => 'require|integer|gt:0',
+        'new_service_date' => 'require|dateFormat:Y-m-d',
+        'apply_reason' => 'max:500',
+        'audit_status' => 'require|in:1,2',
+        'audit_remark' => 'max:500',
+        'view_tab' => 'in:all,pending_confirm,wait_service,reschedule_pending,review_pending',
+        'review_score' => 'require|integer|between:1,5',
+        'review_content' => 'max:1000',
+        'review_images' => 'array|checkVoucherImagesAllowEmpty',
     ];
 
     protected $message = [
@@ -53,6 +62,21 @@ class WeddingOrderValidate extends BaseValidate
         'voucher_remark.max' => '凭证说明最多500个字符',
         'reject_reason.require' => '请输入拒单原因',
         'reject_reason.max' => '拒单原因最多500个字符',
+        'change_id.require' => '改期申请参数缺失',
+        'change_id.integer' => '改期申请参数不正确',
+        'change_id.gt' => '改期申请参数不正确',
+        'new_service_date.require' => '请选择新的服务日期',
+        'new_service_date.dateFormat' => '新的服务日期格式不正确',
+        'apply_reason.max' => '改期原因最多500个字符',
+        'audit_status.require' => '审核结果不能为空',
+        'audit_status.in' => '审核结果不正确',
+        'audit_remark.max' => '审核说明最多500个字符',
+        'view_tab.in' => '筛选标签不正确',
+        'review_score.require' => '请填写评分',
+        'review_score.integer' => '评分格式不正确',
+        'review_score.between' => '评分范围不正确',
+        'review_content.max' => '评价内容最多1000个字符',
+        'review_images.array' => '评价图片格式不正确',
     ];
 
     protected $scene = [
@@ -62,9 +86,15 @@ class WeddingOrderValidate extends BaseValidate
         'cancel' => ['order_id', 'cancel_reason'],
         'offlineVoucher' => ['order_id', 'voucher_images', 'voucher_remark'],
         'providerPendingLists' => ['page_no', 'page_size'],
+        'providerOrderLists' => ['view_tab', 'order_status', 'page_no', 'page_size'],
         'providerOrderDetail' => ['order_id'],
         'providerAccept' => ['order_id'],
         'providerReject' => ['order_id', 'reject_reason'],
+        'rescheduleApply' => ['order_id', 'new_service_date', 'apply_reason'],
+        'providerRescheduleHandle' => ['change_id', 'audit_status', 'audit_remark'],
+        'providerServiceComplete' => ['order_id'],
+        'reviewSubmit' => ['order_id', 'review_score', 'review_content', 'review_images'],
+        'providerReviewAudit' => ['order_id', 'audit_status', 'audit_remark'],
     ];
 
     public function checkDistrictCode($value): bool|string
@@ -91,5 +121,21 @@ class WeddingOrderValidate extends BaseValidate
 
         return true;
     }
-}
 
+    public function checkVoucherImagesAllowEmpty($value): bool|string
+    {
+        if ($value === null || $value === '') {
+            return true;
+        }
+        if (!is_array($value)) {
+            return '评价图片格式不正确';
+        }
+        foreach ($value as $item) {
+            if (trim((string)$item) === '') {
+                return '评价图片格式不正确';
+            }
+        }
+
+        return true;
+    }
+}

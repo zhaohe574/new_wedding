@@ -56,6 +56,18 @@ export function getProviderPendingOrderLists(data: Record<string, any>) {
     return request.get({ url: '/wedding/provider/order/pendingLists', data }, { isAuth: true })
 }
 
+export function applyWeddingOrderReschedule(data: Record<string, any>) {
+    return request.post({ url: '/wedding/order/rescheduleApply', data }, { isAuth: true })
+}
+
+export function submitWeddingOrderReview(data: Record<string, any>) {
+    return request.post({ url: '/wedding/order/reviewSubmit', data }, { isAuth: true })
+}
+
+export function getProviderOrderLists(data: Record<string, any>) {
+    return request.get({ url: '/wedding/provider/order/lists', data }, { isAuth: true })
+}
+
 export function getProviderOrderDetail(data: Record<string, any>) {
     return request.get({ url: '/wedding/provider/order/detail', data }, { isAuth: true })
 }
@@ -66,4 +78,16 @@ export function acceptProviderOrder(data: Record<string, any>) {
 
 export function rejectProviderOrder(data: Record<string, any>) {
     return request.post({ url: '/wedding/provider/order/reject', data }, { isAuth: true })
+}
+
+export function handleProviderOrderReschedule(data: Record<string, any>) {
+    return request.post({ url: '/wedding/provider/order/rescheduleHandle', data }, { isAuth: true })
+}
+
+export function completeProviderOrderService(data: Record<string, any>) {
+    return request.post({ url: '/wedding/provider/order/serviceComplete', data }, { isAuth: true })
+}
+
+export function auditProviderOrderReview(data: Record<string, any>) {
+    return request.post({ url: '/wedding/provider/order/reviewAudit', data }, { isAuth: true })
 }
