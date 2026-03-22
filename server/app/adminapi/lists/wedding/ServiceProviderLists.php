@@ -29,6 +29,7 @@ class ServiceProviderLists extends BaseAdminDataLists implements ListsSearchInte
                 'provider.name',
                 'provider.avatar',
                 'provider.mobile',
+                'provider.work_wechat_userid',
                 'provider.tag_ids',
                 'provider.status',
                 'provider.is_recommend',

@@ -71,6 +71,7 @@
 import { uploadImage } from '@/api/app'
 import { getWeddingOrderDetail, submitWeddingOrderReview } from '@/api/wedding'
 import { useUserStore } from '@/stores/user'
+import { requestWeddingSubscribeMessages } from '@/utils/wedding'
 import { onLoad } from '@dcloudio/uni-app'
 import { reactive, ref } from 'vue'
 
@@ -145,6 +146,7 @@ const handleSubmit = async () => {
     }
     submitting.value = true
     try {
+        await requestWeddingSubscribeMessages([212])
         await submitWeddingOrderReview({
             order_id: orderId.value,
             review_score: form.review_score,

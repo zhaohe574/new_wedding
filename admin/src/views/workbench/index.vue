@@ -54,30 +54,11 @@
                     </div>
                 </template>
 
-                <div class="flex flex-wrap">
-                    <div class="w-1/2 md:w-1/4">
-                        <div class="leading-10">今日支付</div>
-                        <div class="text-6xl">{{ formatAmount(weddingOverview.today.today_paid_amount) }}</div>
-                        <div class="text-tx-secondary text-xs">
-                            累计：{{ formatAmount(weddingOverview.today.total_paid_amount) }}
-                        </div>
-                    </div>
-                    <div class="w-1/2 md:w-1/4">
-                        <div class="leading-10">今日订单</div>
-                        <div class="text-6xl">{{ weddingOverview.today.today_order_count || 0 }}</div>
-                        <div class="text-tx-secondary text-xs">
-                            累计：{{ weddingOverview.today.total_order_count || 0 }}
-                        </div>
-                    </div>
-                    <div class="w-1/2 md:w-1/4">
-                        <div class="leading-10">待服务人员确认</div>
-                        <div class="text-6xl">{{ weddingOverview.todo.wait_provider_confirm_count || 0 }}</div>
-                        <div class="text-tx-secondary text-xs">接单前订单仍处于锁档状态</div>
-                    </div>
-                    <div class="w-1/2 md:w-1/4">
-                        <div class="leading-10">待线下凭证审核</div>
-                        <div class="text-6xl">{{ weddingOverview.todo.wait_offline_voucher_audit_count || 0 }}</div>
-                        <div class="text-tx-secondary text-xs">等待后台人工核验支付凭证</div>
+                <div class="summary-grid">
+                    <div v-for="item in overviewCards" :key="item.title" class="summary-card">
+                        <div class="summary-card__title">{{ item.title }}</div>
+                        <div class="summary-card__value">{{ item.value }}</div>
+                        <div class="summary-card__desc">{{ item.desc }}</div>
                     </div>
                 </div>
             </el-card>
@@ -286,6 +267,39 @@ const weddingOverview = reactive<any>({
     }
 })
 
+const overviewCards = computed(() => [
+    {
+        title: '今日支付',
+        value: formatAmount(weddingOverview.today.today_paid_amount),
+        desc: `累计支付 ${formatAmount(weddingOverview.today.total_paid_amount)}`
+    },
+    {
+        title: '今日订单',
+        value: `${weddingOverview.today.today_order_count || 0}`,
+        desc: `累计订单 ${weddingOverview.today.total_order_count || 0}`
+    },
+    {
+        title: '待服务人员确认',
+        value: `${weddingOverview.todo.wait_provider_confirm_count || 0}`,
+        desc: '接单前订单仍处于锁档状态'
+    },
+    {
+        title: '待线下凭证审核',
+        value: `${weddingOverview.todo.wait_offline_voucher_audit_count || 0}`,
+        desc: '等待后台人工核验支付凭证'
+    },
+    {
+        title: '待退款处理',
+        value: `${weddingOverview.todo.wait_refund_count || 0}`,
+        desc: '退款申请不阻断主流程，但需要平台及时处理'
+    },
+    {
+        title: '待资料变更审核',
+        value: `${weddingOverview.todo.wait_profile_change_count || 0}`,
+        desc: '资料、证书、作品、套餐统一走管理员审核'
+    }
+])
+
 const todoCards = computed(() => [
     {
         title: '待改期处理',
@@ -306,6 +320,26 @@ const todoCards = computed(() => [
         title: '待凭证审核',
         value: weddingOverview.todo.wait_offline_voucher_audit_count || 0,
         desc: '线下支付凭证等待后台人工核验'
+    },
+    {
+        title: '待退款处理',
+        value: weddingOverview.todo.wait_refund_count || 0,
+        desc: '退款结果需回写订单状态，并同步通知用户'
+    },
+    {
+        title: '待资料变更审核',
+        value: weddingOverview.todo.wait_profile_change_count || 0,
+        desc: '资料中心提交的新版本待管理员审核后才生效'
+    },
+    {
+        title: '待动态审核',
+        value: weddingOverview.todo.wait_post_audit_count || 0,
+        desc: '动态默认走管理员审核，通过后才对外公开'
+    },
+    {
+        title: '待评论审核',
+        value: weddingOverview.todo.wait_comment_audit_count || 0,
+        desc: '评论审核遵循 provider_then_admin 或 admin 模式'
     }
 ])
 
@@ -448,6 +482,39 @@ onMounted(() => {
     color: #a16207;
 }
 
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.summary-card {
+    padding: 18px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(255, 250, 251, 0.92), rgba(255, 254, 249, 0.92));
+    border: 1px solid rgba(202, 138, 4, 0.14);
+}
+
+.summary-card__title {
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.summary-card__value {
+    margin-top: 10px;
+    color: #111827;
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.summary-card__desc {
+    margin-top: 10px;
+    color: #6b7280;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
 .todo-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -500,12 +567,14 @@ onMounted(() => {
 }
 
 @media (max-width: 1279px) {
+    .summary-grid,
     .todo-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
 @media (max-width: 767px) {
+    .summary-grid,
     .todo-grid {
         grid-template-columns: minmax(0, 1fr);
     }

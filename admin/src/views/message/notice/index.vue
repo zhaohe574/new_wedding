@@ -21,10 +21,28 @@
             <el-table size="large" :data="pager.lists" v-loading="pager.loading">
                 <el-table-column label="通知场景" prop="scene_name" min-width="120" />
                 <el-table-column label="通知类型" prop="type_desc" min-width="160" />
+                <el-table-column label="站内通知" min-width="90">
+                    <template #default="{ row }">
+                        <el-tag v-if="row.system_notice?.status == 1">开启</el-tag>
+                        <el-tag type="danger" v-else>关闭</el-tag>
+                    </template>
+                </el-table-column>
                 <el-table-column label="短信通知" min-width="80">
                     <template #default="{ row }">
                         <el-tag v-if="row.sms_notice?.status == 1">开启</el-tag>
                         <el-tag type="danger" v-else>关闭</el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column label="订阅消息" min-width="90">
+                    <template #default="{ row }">
+                        <el-tag v-if="row.mnp_notice?.status == 1">开启</el-tag>
+                        <el-tag type="warning" v-else>关闭</el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column label="企业微信" min-width="90">
+                    <template #default="{ row }">
+                        <el-tag v-if="row.work_notice?.status == 1">开启</el-tag>
+                        <el-tag type="info" v-else>关闭</el-tag>
                     </template>
                 </el-table-column>
                 <el-table-column label="操作" min-width="80" fixed="right">

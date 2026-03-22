@@ -81,6 +81,7 @@
                     </template>
                 </el-table-column>
                 <el-table-column label="联系电话" prop="mobile" min-width="120" />
+                <el-table-column label="企微接收账号" prop="work_wechat_userid" min-width="160" />
                 <el-table-column label="推荐" prop="is_recommend_desc" min-width="80" />
                 <el-table-column label="状态" min-width="90">
                     <template #default="{ row }">

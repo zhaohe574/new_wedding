@@ -68,6 +68,8 @@ router.beforeEach(async (to) => {
     const needProviderCenter = [
         '/pages/provider_center/provider_center',
         '/pages/provider_schedule/provider_schedule',
+        '/pages/provider_profile_manage/provider_profile_manage',
+        '/pages/provider_content_manage/provider_content_manage',
         '/pages/provider_order_pending/provider_order_pending',
         '/pages/provider_order_detail/provider_order_detail'
     ].some((item) => path.includes(item))

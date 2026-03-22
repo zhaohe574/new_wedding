@@ -38,6 +38,14 @@
             </view>
 
             <view class="panel-card mt-[24rpx]">
+                <view class="panel-card__title">服务动态</view>
+                <view class="panel-card__desc">
+                    查看该服务人员已审核通过的服务动态与公开评论，帮助你更直观地判断服务风格与近期作品状态。
+                </view>
+                <button class="secondary-btn mt-[20rpx]" @click="handleViewPosts">查看服务动态</button>
+            </view>
+
+            <view class="panel-card mt-[24rpx]">
                 <view class="panel-card__title">可售套餐</view>
                 <view v-if="!detail.packages.length" class="panel-card__desc">
                     当前地区与日期下暂无可售套餐，请返回上一步调整条件。
@@ -161,6 +169,12 @@ const handleGoTemplate = () => {
     })
     uni.navigateTo({
         url: '/pages/wedding_template_form/wedding_template_form'
+    })
+}
+
+const handleViewPosts = () => {
+    uni.navigateTo({
+        url: `/pages/provider_public_posts/provider_public_posts?provider_id=${providerId.value}`
     })
 }
 
@@ -366,5 +380,15 @@ onLoad(async (options) => {
 
 .action-btn[disabled] {
     opacity: 0.45;
+}
+
+.secondary-btn {
+    width: 100%;
+    border-radius: 999rpx;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1rpx solid rgba(219, 39, 119, 0.16);
+    color: #9d174d;
+    font-size: 28rpx;
+    font-weight: 600;
 }
 </style>

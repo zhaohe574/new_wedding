@@ -17,6 +17,7 @@ use app\common\enum\PayEnum;
 use app\common\enum\user\UserTerminalEnum;
 use app\common\model\pay\PayConfig;
 use app\common\service\ConfigService;
+use app\common\service\ServiceBusinessConfigService;
 
 /**
  * 微信配置类
@@ -78,6 +79,27 @@ class WeChatConfigService
         return [
             'app_id' => ConfigService::get('open_platform', 'app_id'),
             'secret' => ConfigService::get('open_platform', 'app_secret'),
+            'response_type' => 'array',
+            'log' => [
+                'level' => 'debug',
+                'file' => app()->getRootPath() . 'runtime/wechat/' . date('Ym') . '/' . date('d') . '.log'
+            ],
+        ];
+    }
+
+
+    /**
+     * @notes 获取企业微信应用配置
+     * @return array
+     */
+    public static function getWorkConfig()
+    {
+        $noticeConfig = ServiceBusinessConfigService::getConfig()['notice'] ?? [];
+
+        return [
+            'corp_id' => $noticeConfig['work_wechat_corp_id'] ?? '',
+            'secret' => $noticeConfig['work_wechat_secret'] ?? '',
+            'agent_id' => $noticeConfig['work_wechat_agent_id'] ?? '',
             'response_type' => 'array',
             'log' => [
                 'level' => 'debug',

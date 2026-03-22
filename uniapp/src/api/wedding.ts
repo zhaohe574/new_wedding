@@ -111,3 +111,51 @@ export function upsertProviderSchedule(data: Record<string, any>) {
 export function deleteProviderScheduleDates(data: Record<string, any>) {
     return request.post({ url: '/wedding/provider/schedule/delete', data }, { isAuth: true })
 }
+
+export function getProviderCenterDetail() {
+    return request.get({ url: '/wedding/provider/center/detail' }, { isAuth: true })
+}
+
+export function getProviderChangeRequestLists(data: Record<string, any>) {
+    return request.get({ url: '/wedding/provider/change-request/lists', data }, { isAuth: true })
+}
+
+export function getProviderChangeRequestDetail(data: Record<string, any>) {
+    return request.get({ url: '/wedding/provider/change-request/detail', data }, { isAuth: true })
+}
+
+export function submitProviderChangeRequest(data: Record<string, any>) {
+    return request.post({ url: '/wedding/provider/change-request/submit', data }, { isAuth: true })
+}
+
+export function getProviderPostLists(data: Record<string, any>) {
+    return request.get({ url: '/wedding/provider/post/lists', data }, { isAuth: true })
+}
+
+export function saveProviderPost(data: Record<string, any>) {
+    return request.post({ url: '/wedding/provider/post/save', data }, { isAuth: true })
+}
+
+export function deleteProviderPost(data: Record<string, any>) {
+    return request.post({ url: '/wedding/provider/post/delete', data }, { isAuth: true })
+}
+
+export function getProviderCommentPendingLists(data: Record<string, any>) {
+    return request.get({ url: '/wedding/provider/comment/pendingLists', data }, { isAuth: true })
+}
+
+export function auditProviderComment(data: Record<string, any>) {
+    return request.post({ url: '/wedding/provider/comment/audit', data }, { isAuth: true })
+}
+
+export function getProviderPublicPostLists(data: Record<string, any>) {
+    return request.get({ url: '/wedding/provider/publicPostLists', data }, { isAuth: true })
+}
+
+export function createProviderPostComment(data: Record<string, any>) {
+    return request.post({ url: '/wedding/provider/post/comment/create', data }, { isAuth: true })
+}
+
+export function getWeddingSubscribeTemplates(data?: Record<string, any>) {
+    return request.get({ url: '/wedding/notice/subscribeTemplates', data }, { isAuth: true })
+}

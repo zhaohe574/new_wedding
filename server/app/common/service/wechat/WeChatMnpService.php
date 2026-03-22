@@ -98,4 +98,17 @@ class WeChatMnpService
     }
 
 
+    /**
+     * @notes 发送小程序订阅消息
+     * @param array $data
+     * @return array
+     * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
+     */
+    public function sendSubscribeMessage(array $data): array
+    {
+        $response = $this->app->getClient()->postJson('cgi-bin/message/subscribe/send', $data);
+        return method_exists($response, 'toArray') ? $response->toArray(false) : (array)$response;
+    }
+
+
 }

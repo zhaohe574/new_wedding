@@ -259,3 +259,47 @@ export function manualRefundServiceOrder(params: any) {
 export function getWeddingDashboardOverview() {
     return request.get({ url: '/wedding.wedding_dashboard/overview' })
 }
+
+export function getProviderChangeRequestLists(params?: any) {
+    return request.get({ url: '/wedding.provider_change_request/lists', params })
+}
+
+export function detailProviderChangeRequest(params: any) {
+    return request.get({ url: '/wedding.provider_change_request/detail', params })
+}
+
+export function auditProviderChangeRequest(params: any) {
+    return request.post({ url: '/wedding.provider_change_request/audit', params })
+}
+
+export function getProviderPostAuditLists(params?: any) {
+    return request.get({ url: '/wedding.provider_post/lists', params })
+}
+
+export function detailProviderPostAudit(params: any) {
+    return request.get({ url: '/wedding.provider_post/detail', params })
+}
+
+export function auditProviderPost(params: any) {
+    return request.post({ url: '/wedding.provider_post/audit', params })
+}
+
+export function getProviderPostCommentAuditLists(params?: any) {
+    return request.get({ url: '/wedding.provider_post_comment/lists', params })
+}
+
+export function detailProviderPostCommentAudit(params: any) {
+    return request.get({ url: '/wedding.provider_post_comment/detail', params })
+}
+
+export function auditProviderPostComment(params: any) {
+    return request.post({ url: '/wedding.provider_post_comment/audit', params })
+}
+
+export function getNoticeMnpLogLists(params?: any) {
+    return request.get({ url: '/wedding.notice_log/mnpLists', params })
+}
+
+export function getNoticeWecomLogLists(params?: any) {
+    return request.get({ url: '/wedding.notice_log/wecomLists', params })
+}

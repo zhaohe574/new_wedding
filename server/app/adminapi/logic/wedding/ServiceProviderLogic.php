@@ -9,7 +9,6 @@ use app\common\model\user\User;
 use app\common\model\wedding\ServiceCategory;
 use app\common\model\wedding\ServiceProvider;
 use app\common\model\wedding\ServiceTag;
-use app\common\service\FileService;
 
 class ServiceProviderLogic extends BaseLogic
 {
@@ -96,8 +95,9 @@ class ServiceProviderLogic extends BaseLogic
             'user_id' => (int)$params['user_id'],
             'category_id' => (int)$params['category_id'],
             'name' => trim((string)$params['name']),
-            'avatar' => FileService::setFileUrl((string)($params['avatar'] ?? '')),
+            'avatar' => (string)($params['avatar'] ?? ''),
             'mobile' => trim((string)($params['mobile'] ?? '')),
+            'work_wechat_userid' => trim((string)($params['work_wechat_userid'] ?? '')),
             'tag_ids' => array_values(array_unique(array_filter(array_map('intval', $params['tag_ids'] ?? [])))),
             'intro' => trim((string)($params['intro'] ?? '')),
             'status' => (int)$params['status'],

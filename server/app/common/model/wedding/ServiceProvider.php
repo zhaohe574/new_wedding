@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace app\common\model\wedding;
 
 use app\common\model\BaseModel;
+use app\common\service\FileService;
 use think\model\concern\SoftDelete;
 
 class ServiceProvider extends BaseModel
@@ -14,6 +15,16 @@ class ServiceProvider extends BaseModel
     protected $name = 'service_provider';
 
     protected $deleteTime = 'delete_time';
+
+    public function getAvatarAttr($value): string
+    {
+        return trim((string)$value) !== '' ? FileService::getFileUrl((string)$value) : '';
+    }
+
+    public function setAvatarAttr($value): string
+    {
+        return trim((string)$value) !== '' ? FileService::setFileUrl((string)$value) : '';
+    }
 
     public function getTagIdsAttr($value): array
     {

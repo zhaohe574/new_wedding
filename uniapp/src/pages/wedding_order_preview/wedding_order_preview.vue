@@ -125,7 +125,13 @@
 
 <script setup lang="ts">
 import { createWeddingOrder, previewWeddingOrder } from '@/api/wedding'
-import { getSelectedRegion, getSelectedServiceDate, getWeddingOrderDraft, patchWeddingOrderDraft } from '@/utils/wedding'
+import {
+    getSelectedRegion,
+    getSelectedServiceDate,
+    getWeddingOrderDraft,
+    patchWeddingOrderDraft,
+    requestWeddingSubscribeMessages
+} from '@/utils/wedding'
 import { useAppStore } from '@/stores/app'
 import { onLoad } from '@dcloudio/uni-app'
 import { computed, reactive, ref } from 'vue'
@@ -246,6 +252,7 @@ const handleCreateOrder = async () => {
 
     creating.value = true
     try {
+        await requestWeddingSubscribeMessages([201])
         const payload = {
             ...preview.preview_payload,
             payment_type: paymentType.value

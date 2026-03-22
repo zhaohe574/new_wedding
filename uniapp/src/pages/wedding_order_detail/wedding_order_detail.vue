@@ -266,6 +266,7 @@ import {
     submitWeddingOfflineVoucher
 } from '@/api/wedding'
 import { useUserStore } from '@/stores/user'
+import { requestWeddingSubscribeMessages } from '@/utils/wedding'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import { computed, reactive, ref } from 'vue'
 
@@ -407,6 +408,7 @@ const handleSubmitReschedule = async () => {
     }
     rescheduleSubmitting.value = true
     try {
+        await requestWeddingSubscribeMessages([209])
         await applyWeddingOrderReschedule({
             order_id: orderId.value,
             new_service_date: rescheduleForm.new_service_date,
@@ -426,6 +428,7 @@ const handleSubmitRefund = async () => {
     }
     refundSubmitting.value = true
     try {
+        await requestWeddingSubscribeMessages([214])
         await applyWeddingOrderRefund({
             order_id: orderId.value,
             apply_reason: refundForm.apply_reason

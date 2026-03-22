@@ -13,17 +13,37 @@ class ServiceOrderNoticeService
 {
     public static function sendByScene(int $sceneId, int $userId, array $params = [], array $extra = []): ?NoticeRecord
     {
-        $config = ServiceBusinessConfigService::getConfig();
-        if ((int)($config['notice']['system_notice_enabled'] ?? 0) !== 1) {
-            return null;
-        }
-
         $noticeSetting = NoticeSetting::where('scene_id', $sceneId)->findOrEmpty();
         if ($noticeSetting->isEmpty()) {
             return null;
         }
 
+        $config = ServiceBusinessConfigService::getConfig();
         $noticeData = $noticeSetting->toArray();
+        $record = self::sendSystemNotice($sceneId, $userId, $params, $extra, $noticeData, $config);
+
+        $targetRole = trim((string)($extra['target_role'] ?? ''));
+        if ($targetRole === 'user') {
+            ServiceMnpNoticeService::send($sceneId, $userId, $params, $extra);
+        } elseif ($targetRole === 'provider') {
+            ServiceWecomNoticeService::send($sceneId, $userId, $params, $extra);
+        }
+
+        return $record;
+    }
+
+    private static function sendSystemNotice(
+        int $sceneId,
+        int $userId,
+        array $params,
+        array $extra,
+        array $noticeData,
+        array $config
+    ): ?NoticeRecord {
+        if ((int)($config['notice']['system_notice_enabled'] ?? 0) !== 1) {
+            return null;
+        }
+
         $systemNotice = $noticeData['system_notice'] ?? [];
         if ((int)($systemNotice['status'] ?? 0) !== 1) {
             return null;

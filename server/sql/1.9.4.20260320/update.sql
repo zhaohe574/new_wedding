@@ -677,6 +677,215 @@ REPLACE INTO `la_system_menu` (`id`, `pid`, `type`, `name`, `icon`, `sort`, `per
 (9106, 9105, 'A', '评价列表', '', 100, 'wedding.service_order_review/lists', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
 (9107, 9105, 'A', '评价详情', '', 90, 'wedding.service_order_review/detail', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
 (9108, 9105, 'A', '评价审核', '', 80, 'wedding.service_order_review/audit', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
-(9109, 179, 'A', '经营指标概览', '', 31, 'wedding.wedding_dashboard/overview', '', '', '', '', 0, 0, 0, 1773945600, 1773945600);
+(9109, 179, 'A', '经营指标概览', '', 31, 'wedding.wedding_dashboard/overview', '', '', '', '', 0, 0, 0, 1773945600, 1773945600),
+(9115, 179, 'C', '资料变更审核', '', 30, 'wedding.provider_change_request/lists', 'provider-change-request', 'wedding/provider-change-request/index', '', '', 0, 1, 0, 1773945600, 1773945600),
+(9116, 9115, 'A', '变更列表', '', 100, 'wedding.provider_change_request/lists', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
+(9117, 9115, 'A', '变更详情', '', 90, 'wedding.provider_change_request/detail', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
+(9118, 9115, 'A', '变更审核', '', 80, 'wedding.provider_change_request/audit', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
+(9119, 179, 'C', '动态审核', '', 29, 'wedding.provider_post/lists', 'provider-post', 'wedding/provider-post/index', '', '', 0, 1, 0, 1773945600, 1773945600),
+(9120, 9119, 'A', '动态列表', '', 100, 'wedding.provider_post/lists', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
+(9121, 9119, 'A', '动态详情', '', 90, 'wedding.provider_post/detail', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
+(9122, 9119, 'A', '动态审核', '', 80, 'wedding.provider_post/audit', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
+(9123, 179, 'C', '评论审核', '', 28, 'wedding.provider_post_comment/lists', 'provider-post-comment', 'wedding/provider-post-comment/index', '', '', 0, 1, 0, 1773945600, 1773945600),
+(9124, 9123, 'A', '评论列表', '', 100, 'wedding.provider_post_comment/lists', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
+(9125, 9123, 'A', '评论详情', '', 90, 'wedding.provider_post_comment/detail', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
+(9126, 9123, 'A', '评论审核', '', 80, 'wedding.provider_post_comment/audit', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
+(9127, 179, 'C', '通知日志', '', 27, 'wedding.notice_log/mnpLists', 'notice-log', 'wedding/notice-log/index', '', '', 0, 1, 0, 1773945600, 1773945600),
+(9128, 9127, 'A', '小程序日志', '', 100, 'wedding.notice_log/mnpLists', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
+(9129, 9127, 'A', '企业微信日志', '', 90, 'wedding.notice_log/wecomLists', '', '', '', '', 0, 1, 0, 1773945600, 1773945600);
+
+SELECT COUNT(*) INTO @work_wechat_userid_exists
+FROM `INFORMATION_SCHEMA`.`COLUMNS`
+WHERE `TABLE_SCHEMA` = DATABASE()
+  AND `TABLE_NAME` = 'la_service_provider'
+  AND `COLUMN_NAME` = 'work_wechat_userid';
+
+SET @sql_work_wechat_userid = IF(
+  @work_wechat_userid_exists = 0,
+  'ALTER TABLE `la_service_provider` ADD COLUMN `work_wechat_userid` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '''' COMMENT ''企业微信接收账号'' AFTER `mobile`',
+  'SELECT 1'
+);
+PREPARE stmt_work_wechat_userid FROM @sql_work_wechat_userid;
+EXECUTE stmt_work_wechat_userid;
+DEALLOCATE PREPARE stmt_work_wechat_userid;
+
+SELECT COUNT(*) INTO @work_notice_exists
+FROM `INFORMATION_SCHEMA`.`COLUMNS`
+WHERE `TABLE_SCHEMA` = DATABASE()
+  AND `TABLE_NAME` = 'la_notice_setting'
+  AND `COLUMN_NAME` = 'work_notice';
+
+SET @sql_work_notice = IF(
+  @work_notice_exists = 0,
+  'ALTER TABLE `la_notice_setting` ADD COLUMN `work_notice` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT ''企业微信应用消息配置'' AFTER `mnp_notice`',
+  'SELECT 1'
+);
+PREPARE stmt_work_notice FROM @sql_work_notice;
+EXECUTE stmt_work_notice;
+DEALLOCATE PREPARE stmt_work_notice;
+
+CREATE TABLE IF NOT EXISTS `la_provider_certificate` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `provider_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '服务人员ID',
+  `certificate_name` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '证书名称',
+  `certificate_image` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '证书图片',
+  `issuing_authority` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '发证机构',
+  `issue_date` date DEFAULT NULL COMMENT '发证日期',
+  `expire_date` date DEFAULT NULL COMMENT '到期日期',
+  `description` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '说明',
+  `status` tinyint(1) UNSIGNED NOT NULL DEFAULT 1 COMMENT '状态 0-停用 1-启用',
+  `sort` int(11) NOT NULL DEFAULT 0 COMMENT '排序',
+  `create_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '创建时间',
+  `update_time` int(10) UNSIGNED DEFAULT NULL COMMENT '更新时间',
+  `delete_time` int(10) DEFAULT NULL COMMENT '删除时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_provider_status` (`provider_id`, `status`) USING BTREE,
+  INDEX `idx_delete_time` (`delete_time`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='服务人员资质证书表';
+
+CREATE TABLE IF NOT EXISTS `la_provider_work` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `provider_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '服务人员ID',
+  `title` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '作品标题',
+  `cover` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '封面图',
+  `images` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '作品图片JSON',
+  `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '作品说明',
+  `status` tinyint(1) UNSIGNED NOT NULL DEFAULT 1 COMMENT '状态 0-停用 1-启用',
+  `sort` int(11) NOT NULL DEFAULT 0 COMMENT '排序',
+  `create_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '创建时间',
+  `update_time` int(10) UNSIGNED DEFAULT NULL COMMENT '更新时间',
+  `delete_time` int(10) DEFAULT NULL COMMENT '删除时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_provider_status` (`provider_id`, `status`) USING BTREE,
+  INDEX `idx_delete_time` (`delete_time`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='服务人员作品表';
+
+CREATE TABLE IF NOT EXISTS `la_provider_change_request` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `provider_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '服务人员ID',
+  `change_type` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '变更类型 profile/certificate/work/package',
+  `target_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '关联目标ID',
+  `change_title` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '变更标题',
+  `before_snapshot` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '变更前快照',
+  `after_snapshot` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '变更后快照',
+  `audit_status` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '审核状态 0-待审核 1-通过 2-驳回',
+  `audit_role` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'admin' COMMENT '审核角色',
+  `audit_by` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '审核人',
+  `audit_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '审核时间',
+  `audit_remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '审核备注',
+  `create_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '创建时间',
+  `update_time` int(10) UNSIGNED DEFAULT NULL COMMENT '更新时间',
+  `delete_time` int(10) DEFAULT NULL COMMENT '删除时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_provider_type_status` (`provider_id`, `change_type`, `audit_status`) USING BTREE,
+  INDEX `idx_target_type` (`target_id`, `change_type`) USING BTREE,
+  INDEX `idx_delete_time` (`delete_time`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='服务人员资料变更申请表';
+
+CREATE TABLE IF NOT EXISTS `la_provider_post` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `provider_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '服务人员ID',
+  `user_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '发布用户ID',
+  `title` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '动态标题',
+  `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '动态内容',
+  `cover` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '封面图',
+  `images` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '动态图片JSON',
+  `status` tinyint(1) UNSIGNED NOT NULL DEFAULT 1 COMMENT '状态 0-关闭 1-启用',
+  `audit_status` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '当前审核状态 0-待审核 1-通过 2-驳回',
+  `audit_role` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '当前审核角色',
+  `audit_by` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '当前审核人',
+  `audit_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '当前审核时间',
+  `audit_remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '当前审核备注',
+  `provider_audit_status` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '服务人员审核状态',
+  `provider_audit_by` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '服务人员审核人',
+  `provider_audit_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '服务人员审核时间',
+  `provider_audit_remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '服务人员审核备注',
+  `admin_audit_status` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '管理员审核状态',
+  `admin_audit_by` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '管理员审核人',
+  `admin_audit_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '管理员审核时间',
+  `admin_audit_remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '管理员审核备注',
+  `view_count` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '浏览次数',
+  `create_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '创建时间',
+  `update_time` int(10) UNSIGNED DEFAULT NULL COMMENT '更新时间',
+  `delete_time` int(10) DEFAULT NULL COMMENT '删除时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_provider_audit` (`provider_id`, `audit_status`, `audit_role`) USING BTREE,
+  INDEX `idx_user_id` (`user_id`) USING BTREE,
+  INDEX `idx_delete_time` (`delete_time`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='服务人员动态表';
+
+CREATE TABLE IF NOT EXISTS `la_provider_post_comment` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `post_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '动态ID',
+  `provider_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '服务人员ID',
+  `user_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '评论用户ID',
+  `parent_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '父评论ID',
+  `content` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '评论内容',
+  `status` tinyint(1) UNSIGNED NOT NULL DEFAULT 1 COMMENT '状态 0-关闭 1-启用',
+  `audit_status` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '当前审核状态 0-待审核 1-通过 2-驳回',
+  `audit_role` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '当前审核角色',
+  `audit_by` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '当前审核人',
+  `audit_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '当前审核时间',
+  `audit_remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '当前审核备注',
+  `provider_audit_status` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '服务人员审核状态',
+  `provider_audit_by` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '服务人员审核人',
+  `provider_audit_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '服务人员审核时间',
+  `provider_audit_remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '服务人员审核备注',
+  `admin_audit_status` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '管理员审核状态',
+  `admin_audit_by` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '管理员审核人',
+  `admin_audit_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '管理员审核时间',
+  `admin_audit_remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '管理员审核备注',
+  `create_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '创建时间',
+  `update_time` int(10) UNSIGNED DEFAULT NULL COMMENT '更新时间',
+  `delete_time` int(10) DEFAULT NULL COMMENT '删除时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_post_audit` (`post_id`, `audit_status`, `audit_role`) USING BTREE,
+  INDEX `idx_provider_audit` (`provider_id`, `audit_status`, `audit_role`) USING BTREE,
+  INDEX `idx_user_id` (`user_id`) USING BTREE,
+  INDEX `idx_delete_time` (`delete_time`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='服务人员动态评论表';
+
+CREATE TABLE IF NOT EXISTS `la_notice_mnp_log` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `scene_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '通知场景ID',
+  `scene_name` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '通知场景名称',
+  `order_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '关联订单ID',
+  `user_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '接收用户ID',
+  `provider_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '关联服务人员ID',
+  `openid` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '小程序openid',
+  `template_id` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '模板ID',
+  `template_sn` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '模板编号',
+  `send_status` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '发送状态 0-失败 1-成功',
+  `error_message` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '错误信息',
+  `request_data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '请求参数',
+  `response_data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '响应结果',
+  `create_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '创建时间',
+  `update_time` int(10) UNSIGNED DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_scene_status` (`scene_id`, `send_status`) USING BTREE,
+  INDEX `idx_order_id` (`order_id`) USING BTREE,
+  INDEX `idx_user_id` (`user_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='小程序订阅消息日志表';
+
+CREATE TABLE IF NOT EXISTS `la_notice_wecom_log` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `scene_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '通知场景ID',
+  `scene_name` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '通知场景名称',
+  `order_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '关联订单ID',
+  `user_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '发送目标用户ID',
+  `provider_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '关联服务人员ID',
+  `receiver_userid` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '企业微信接收账号',
+  `agent_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '企业微信应用ID',
+  `send_status` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '发送状态 0-失败 1-成功',
+  `error_message` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '错误信息',
+  `request_data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '请求参数',
+  `response_data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '响应结果',
+  `create_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '创建时间',
+  `update_time` int(10) UNSIGNED DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_scene_status` (`scene_id`, `send_status`) USING BTREE,
+  INDEX `idx_order_id` (`order_id`) USING BTREE,
+  INDEX `idx_provider_id` (`provider_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='企业微信通知日志表';
 
 SET FOREIGN_KEY_CHECKS=1;

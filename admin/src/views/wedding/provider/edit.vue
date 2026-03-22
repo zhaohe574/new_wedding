@@ -56,6 +56,13 @@
             <el-form-item label="联系电话" prop="mobile">
                 <el-input v-model="formData.mobile" placeholder="请输入联系电话" clearable />
             </el-form-item>
+            <el-form-item label="企微接收账号" prop="work_wechat_userid">
+                <el-input
+                    v-model="formData.work_wechat_userid"
+                    placeholder="请输入企业微信 userid，用于接收应用消息"
+                    clearable
+                />
+            </el-form-item>
             <el-form-item label="推荐位" prop="is_recommend">
                 <el-switch v-model="formData.is_recommend" :active-value="1" :inactive-value="0" />
             </el-form-item>
@@ -99,6 +106,7 @@ const formData = reactive({
     name: '',
     avatar: '',
     mobile: '',
+    work_wechat_userid: '',
     tag_ids: [] as number[],
     intro: '',
     status: 1,
@@ -144,6 +152,7 @@ const resetForm = () => {
         name: '',
         avatar: '',
         mobile: '',
+        work_wechat_userid: '',
         tag_ids: [],
         intro: '',
         status: 1,

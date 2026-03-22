@@ -126,6 +126,9 @@ return [
             'system_notice_enabled' => 1,
             'mnp_notice_enabled' => 1,
             'work_wechat_notice_enabled' => 0,
+            'work_wechat_corp_id' => '',
+            'work_wechat_secret' => '',
+            'work_wechat_agent_id' => '',
         ],
         'display' => [
             'provider_center_enabled' => 1,

@@ -45,17 +45,21 @@
                     <view class="entry-item__title">档期管理</view>
                     <view class="entry-item__desc">按自然日查看月视图档期，批量设为不可服务或恢复可预约</view>
                 </view>
+                <view class="entry-item" @click="navigateTo('/pages/provider_profile_manage/provider_profile_manage')">
+                    <view class="entry-item__title">资料中心</view>
+                    <view class="entry-item__desc">维护资料、证书、作品、套餐，并查看当前待审核版本</view>
+                </view>
                 <view class="entry-item" @click="navigateTo('/pages/provider_order_pending/provider_order_pending')">
                     <view class="entry-item__title">订单工作台</view>
                     <view class="entry-item__desc">查看全部订单、待履约、改期待处理与评价待审</view>
                 </view>
+                <view class="entry-item" @click="navigateTo('/pages/provider_content_manage/provider_content_manage')">
+                    <view class="entry-item__title">内容互动</view>
+                    <view class="entry-item__desc">发布服务动态，处理名下动态评论，跟进互动审核结果</view>
+                </view>
                 <view class="entry-item" @click="navigateTo('/pages/notice_center/notice_center')">
                     <view class="entry-item__title">通知中心</view>
                     <view class="entry-item__desc">统一查看接单、改期、凭证与评价相关站内通知</view>
-                </view>
-                <view class="entry-item" @click="navigateTo('/pages/wedding_order_list/wedding_order_list')">
-                    <view class="entry-item__title">用户订单视角</view>
-                    <view class="entry-item__desc">快速核对用户侧订单状态展示</view>
                 </view>
             </view>
         </view>

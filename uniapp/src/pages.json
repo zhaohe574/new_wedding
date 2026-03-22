@@ -173,6 +173,24 @@
             }
         },
         {
+            "path": "pages/provider_profile_manage/provider_profile_manage",
+            "style": {
+                "navigationBarTitleText": "资料中心"
+            },
+            "meta": {
+                "auth": true
+            }
+        },
+        {
+            "path": "pages/provider_content_manage/provider_content_manage",
+            "style": {
+                "navigationBarTitleText": "内容互动中心"
+            },
+            "meta": {
+                "auth": true
+            }
+        },
+        {
             "path": "pages/dashboard/dashboard",
             "style": {
                 "navigationBarTitleText": "经营驾驶舱"
@@ -212,6 +230,15 @@
             "path": "pages/wedding_provider_detail/wedding_provider_detail",
             "style": {
                 "navigationBarTitleText": "服务人员详情"
+            },
+            "meta": {
+                "auth": true
+            }
+        },
+        {
+            "path": "pages/provider_public_posts/provider_public_posts",
+            "style": {
+                "navigationBarTitleText": "服务动态"
             },
             "meta": {
                 "auth": true

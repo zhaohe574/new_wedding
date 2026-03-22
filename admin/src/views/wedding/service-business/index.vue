@@ -128,9 +128,30 @@
                     <el-form-item label="订阅消息">
                         <el-switch v-model="formData.notice.mnp_notice_enabled" :active-value="1" :inactive-value="0" />
                     </el-form-item>
-                    <el-form-item label="企业微信消息">
-                        <el-switch v-model="formData.notice.work_wechat_notice_enabled" :active-value="1" :inactive-value="0" />
-                    </el-form-item>
+                <el-form-item label="企业微信消息">
+                    <el-switch v-model="formData.notice.work_wechat_notice_enabled" :active-value="1" :inactive-value="0" />
+                </el-form-item>
+                <el-form-item label="企业微信 CorpID">
+                    <el-input
+                        v-model="formData.notice.work_wechat_corp_id"
+                        placeholder="请输入企业微信 CorpID"
+                        clearable
+                    />
+                </el-form-item>
+                <el-form-item label="企业微信 Secret">
+                    <el-input
+                        v-model="formData.notice.work_wechat_secret"
+                        placeholder="请输入企业微信 Secret"
+                        clearable
+                    />
+                </el-form-item>
+                <el-form-item label="企业微信 AgentID">
+                    <el-input
+                        v-model="formData.notice.work_wechat_agent_id"
+                        placeholder="请输入企业微信应用 AgentID"
+                        clearable
+                    />
+                </el-form-item>
                 </el-card>
             </div>
 
@@ -215,7 +236,10 @@ const createDefaultForm = () => ({
     notice: {
         system_notice_enabled: 1,
         mnp_notice_enabled: 1,
-        work_wechat_notice_enabled: 0
+        work_wechat_notice_enabled: 0,
+        work_wechat_corp_id: '',
+        work_wechat_secret: '',
+        work_wechat_agent_id: ''
     },
     display: {
         provider_center_enabled: 1,

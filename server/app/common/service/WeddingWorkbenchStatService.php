@@ -7,9 +7,14 @@ namespace app\common\service;
 use app\common\enum\PayEnum;
 use app\common\enum\wedding\ServiceOrderChangeEnum;
 use app\common\enum\wedding\ServiceOrderEnum;
+use app\common\enum\wedding\ProviderChangeRequestEnum;
 use app\common\enum\wedding\ServiceOrderReviewEnum;
+use app\common\model\wedding\ProviderChangeRequest;
+use app\common\model\wedding\ProviderPost;
+use app\common\model\wedding\ProviderPostComment;
 use app\common\model\wedding\ServiceOrder;
 use app\common\model\wedding\ServiceOrderChange;
+use app\common\model\wedding\ServiceOrderRefund;
 use app\common\model\wedding\ServiceOrderReview;
 
 class WeddingWorkbenchStatService
@@ -26,6 +31,10 @@ class WeddingWorkbenchStatService
         $waitOfflineVoucherAuditCount = self::countOrdersByStatus(ServiceOrderEnum::WAIT_OFFLINE_VOUCHER_AUDIT);
         $waitRescheduleCount = self::countPendingReschedules();
         $waitReviewAuditCount = self::countPendingReviews();
+        $waitRefundCount = self::countPendingRefunds();
+        $waitProfileChangeCount = self::countPendingProfileChanges();
+        $waitPostAuditCount = self::countPendingPosts();
+        $waitCommentAuditCount = self::countPendingComments();
         $orderTrend = self::buildOrderTrend(15);
         $paymentTrend = self::buildPaymentTrend(7);
 
@@ -41,6 +50,10 @@ class WeddingWorkbenchStatService
                 'wait_offline_voucher_audit_count' => $waitOfflineVoucherAuditCount,
                 'wait_reschedule_count' => $waitRescheduleCount,
                 'wait_review_audit_count' => $waitReviewAuditCount,
+                'wait_refund_count' => $waitRefundCount,
+                'wait_profile_change_count' => $waitProfileChangeCount,
+                'wait_post_audit_count' => $waitPostAuditCount,
+                'wait_comment_audit_count' => $waitCommentAuditCount,
                 'order_count' => $todayOrderCount,
                 'order_total_count' => $totalOrderCount,
                 'paid_amount' => $todayPaidAmount,
@@ -51,6 +64,10 @@ class WeddingWorkbenchStatService
                 'wait_offline_voucher_audit_count' => $waitOfflineVoucherAuditCount,
                 'wait_reschedule_count' => $waitRescheduleCount,
                 'wait_review_audit_count' => $waitReviewAuditCount,
+                'wait_refund_count' => $waitRefundCount,
+                'wait_profile_change_count' => $waitProfileChangeCount,
+                'wait_post_audit_count' => $waitPostAuditCount,
+                'wait_comment_audit_count' => $waitCommentAuditCount,
             ],
             'order_trend' => [
                 'date' => $orderTrend['date'],
@@ -145,6 +162,34 @@ class WeddingWorkbenchStatService
     private static function countPendingReviews(): int
     {
         return (int)ServiceOrderReview::whereNull('delete_time')
+            ->where('audit_status', ServiceOrderReviewEnum::AUDIT_PENDING)
+            ->count();
+    }
+
+    private static function countPendingRefunds(): int
+    {
+        return (int)ServiceOrderRefund::whereNull('delete_time')
+            ->where('status', 0)
+            ->count();
+    }
+
+    private static function countPendingProfileChanges(): int
+    {
+        return (int)ProviderChangeRequest::whereNull('delete_time')
+            ->where('audit_status', ProviderChangeRequestEnum::AUDIT_STATUS_PENDING)
+            ->count();
+    }
+
+    private static function countPendingPosts(): int
+    {
+        return (int)ProviderPost::whereNull('delete_time')
+            ->where('audit_status', ServiceOrderReviewEnum::AUDIT_PENDING)
+            ->count();
+    }
+
+    private static function countPendingComments(): int
+    {
+        return (int)ProviderPostComment::whereNull('delete_time')
             ->where('audit_status', ServiceOrderReviewEnum::AUDIT_PENDING)
             ->count();
     }

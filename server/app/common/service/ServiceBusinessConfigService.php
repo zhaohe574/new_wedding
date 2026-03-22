@@ -132,6 +132,9 @@ class ServiceBusinessConfigService
 
         $config['trade']['provider_confirm_timeout_minutes'] = max(1, (int)($config['trade']['provider_confirm_timeout_minutes'] ?? 30));
         $config['trade']['pay_timeout_minutes'] = max(1, (int)($config['trade']['pay_timeout_minutes'] ?? 30));
+        $config['notice']['work_wechat_corp_id'] = trim((string)($config['notice']['work_wechat_corp_id'] ?? ''));
+        $config['notice']['work_wechat_secret'] = trim((string)($config['notice']['work_wechat_secret'] ?? ''));
+        $config['notice']['work_wechat_agent_id'] = trim((string)($config['notice']['work_wechat_agent_id'] ?? ''));
 
         $config['provider_users'] = array_values(array_filter(array_map(function ($item) {
             return [

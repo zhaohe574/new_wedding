@@ -117,4 +117,14 @@ class NoticeSetting extends BaseModel
     {
         return empty($value) ? [] : json_decode($value, true);
     }
+
+    /**
+     * @notes 企业微信应用消息获取器
+     * @param $value
+     * @return array|mixed
+     */
+    public function getWorkNoticeAttr($value)
+    {
+        return empty($value) ? [] : json_decode($value, true);
+    }
 }

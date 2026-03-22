@@ -35,7 +35,7 @@ class NoticeLogic extends BaseLogic
      */
     public static function detail($params)
     {
-        $field = 'id,type,scene_id,scene_name,scene_desc,system_notice,sms_notice,oa_notice,mnp_notice,support';
+        $field = 'id,type,scene_id,scene_name,scene_desc,system_notice,sms_notice,oa_notice,mnp_notice,work_notice,support';
         $noticeSetting = NoticeSetting::field($field)->findOrEmpty($params['id'])->toArray();
         if (empty($noticeSetting)) {
             return [];
@@ -67,7 +67,7 @@ class NoticeLogic extends BaseLogic
                 'status' => 0,
             ];
         }
-        $noticeSetting['oa_notice']['tips'] = NoticeEnum::getOperationTips(NoticeEnum::MNP, $noticeSetting['scene_id']);
+        $noticeSetting['oa_notice']['tips'] = NoticeEnum::getOperationTips(NoticeEnum::OA, $noticeSetting['scene_id']);
         if (empty($noticeSetting['mnp_notice'])) {
             $noticeSetting['mnp_notice'] = [
                 'template_id' => '',
@@ -78,10 +78,23 @@ class NoticeLogic extends BaseLogic
             ];
         }
         $noticeSetting['mnp_notice']['tips'] = NoticeEnum::getOperationTips(NoticeEnum::MNP, $noticeSetting['scene_id']);
+        if (empty($noticeSetting['work_notice'])) {
+            $noticeSetting['work_notice'] = [
+                'message_type' => 'textcard',
+                'title' => '',
+                'description' => '',
+                'content' => '',
+                'url' => '',
+                'button_text' => '查看详情',
+                'status' => 0,
+            ];
+        }
+        $noticeSetting['work_notice']['tips'] = NoticeEnum::getOperationTips(NoticeEnum::WORK, $noticeSetting['scene_id']);
         $noticeSetting['system_notice']['is_show'] = in_array(NoticeEnum::SYSTEM, explode(',', $noticeSetting['support']));
         $noticeSetting['sms_notice']['is_show'] = in_array(NoticeEnum::SMS, explode(',', $noticeSetting['support']));
         $noticeSetting['oa_notice']['is_show'] = in_array(NoticeEnum::OA, explode(',', $noticeSetting['support']));
         $noticeSetting['mnp_notice']['is_show'] = in_array(NoticeEnum::MNP, explode(',', $noticeSetting['support']));
+        $noticeSetting['work_notice']['is_show'] = true;
         $noticeSetting['default'] = '';
         $noticeSetting['type'] = NoticeEnum::getTypeDesc($noticeSetting['type']);
         return $noticeSetting;
@@ -135,7 +148,7 @@ class NoticeLogic extends BaseLogic
         }
 
         // 通知类型
-        $noticeType = ['system', 'sms', 'oa', 'mnp'];
+        $noticeType = ['system', 'sms', 'oa', 'mnp', 'work'];
 
         foreach ($params['template'] as $item) {
             if (!is_array($item)) {
@@ -158,6 +171,9 @@ class NoticeLogic extends BaseLogic
                     break;
                 case "mnp";
                     self::checkMnp($item);
+                    break;
+                case "work";
+                    self::checkWork($item);
                     break;
             }
         }
@@ -220,6 +236,19 @@ class NoticeLogic extends BaseLogic
     {
         if (!isset($item['template_id']) || !isset($item['template_sn']) || !isset($item['name']) || !isset($item['tpl']) || !isset($item['status'])) {
             throw new \Exception('微信模板消息必填参数：template_id、template_sn、name、tpl、status');
+        }
+    }
+
+
+    /**
+     * @notes 校验企业微信应用消息必填参数
+     * @param $item
+     * @throws \Exception
+     */
+    public static function checkWork($item)
+    {
+        if (!isset($item['message_type']) || !isset($item['status'])) {
+            throw new \Exception('企业微信应用消息必填参数：message_type、status');
         }
     }
 }

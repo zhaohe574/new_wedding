@@ -27,6 +27,7 @@ class NoticeEnum
     const SMS = 2;
     const OA = 3;
     const MNP = 4;
+    const WORK = 5;
 
 
     /**
@@ -231,6 +232,23 @@ class NoticeEnum
         return $desc[$sceneId] ?? [];
     }
 
+    /**
+     * @notes 获取企业微信应用消息示例
+     * @param $sceneId
+     * @param false $flag
+     * @return array|mixed
+     */
+    public static function getWorkExample($sceneId, $flag = false)
+    {
+        $desc = [];
+
+        if ($flag) {
+            return $desc;
+        }
+
+        return $desc[$sceneId] ?? [];
+    }
+
 
     /**
      * @notes 提示
@@ -263,6 +281,11 @@ class NoticeEnum
             case self::MNP:
                 $other[] = '配置路径：小程序后台 > 功能 > 订阅消息';
                 $example = self::getMnpExample($sceneId);
+                break;
+            case self::WORK:
+                $other[] = '配置路径：企业微信后台 > 应用管理 > 自建应用';
+                $other[] = '接收账号取自服务人员主档 work_wechat_userid 字段';
+                $example = self::getWorkExample($sceneId);
                 break;
         }
         $tips = array_merge($vars, $example, $other);

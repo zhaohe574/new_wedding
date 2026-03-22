@@ -1,4 +1,5 @@
 import cache from '@/utils/cache'
+import { getWeddingSubscribeTemplates } from '@/api/wedding'
 
 export const WEDDING_ORDER_DRAFT_KEY = 'wedding_order_draft'
 
@@ -56,6 +57,36 @@ export function patchWeddingOrderDraft(patch: Record<string, any>) {
 
 export function clearWeddingOrderDraft() {
     cache.remove(WEDDING_ORDER_DRAFT_KEY)
+}
+
+export async function requestWeddingSubscribeMessages(sceneIds: number[] = []) {
+    // #ifndef MP-WEIXIN
+    return
+    // #endif
+
+    // #ifdef MP-WEIXIN
+    const ids = Array.from(new Set((sceneIds || []).map((item) => Number(item)).filter((item) => item > 0)))
+    if (!ids.length) {
+        return
+    }
+
+    try {
+        const data = await getWeddingSubscribeTemplates({
+            scene_ids: ids
+        })
+        const templateIds = Array.from(
+            new Set((data?.lists || []).map((item: any) => String(item.template_id || '')).filter(Boolean))
+        )
+        if (!templateIds.length) {
+            return
+        }
+        await uni.requestSubscribeMessage({
+            tmplIds: templateIds
+        })
+    } catch (error) {
+        console.log('requestWeddingSubscribeMessages error', error)
+    }
+    // #endif
 }
 
 function normalizeTemplateFormData(value: any): Record<string, any> {

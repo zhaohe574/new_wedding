@@ -149,6 +149,16 @@ const statsList = computed(() => {
             title: '待线下凭证审核',
             value: `${today.wait_offline_voucher_audit_count ?? 0}`,
             hint: '需要后台尽快完成人工核验'
+        },
+        {
+            title: '待退款处理',
+            value: `${today.wait_refund_count ?? 0}`,
+            hint: '退款处理结果将同步影响订单状态'
+        },
+        {
+            title: '待资料变更审核',
+            value: `${today.wait_profile_change_count ?? 0}`,
+            hint: '资料中心的新版本需审核后才会替换正式数据'
         }
     ]
 })
@@ -175,6 +185,26 @@ const todoList = computed(() => {
             label: '待凭证审核',
             value: `${todo.wait_offline_voucher_audit_count ?? 0}`,
             desc: '线下支付凭证正在等待人工核验'
+        },
+        {
+            label: '待退款处理',
+            value: `${todo.wait_refund_count ?? 0}`,
+            desc: '退款处理完成后需同步订单结果与用户通知'
+        },
+        {
+            label: '待资料变更审核',
+            value: `${todo.wait_profile_change_count ?? 0}`,
+            desc: '资料、证书、作品、套餐统一由管理员审核'
+        },
+        {
+            label: '待动态审核',
+            value: `${todo.wait_post_audit_count ?? 0}`,
+            desc: '动态默认走管理员审核，通过后才会公开展示'
+        },
+        {
+            label: '待评论审核',
+            value: `${todo.wait_comment_audit_count ?? 0}`,
+            desc: '评论审核与评价审核共用婚庆互动审核规则'
         }
     ]
 })
@@ -284,7 +314,7 @@ onShow(() => {
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 20rpx;
     margin-top: 24rpx;
 }
@@ -324,7 +354,7 @@ onShow(() => {
 
 .todo-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 18rpx;
     margin-top: 22rpx;
 }
@@ -433,7 +463,7 @@ onShow(() => {
 @media (max-width: 480px) {
     .stats-grid,
     .todo-grid {
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .trend-row {

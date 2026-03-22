@@ -2114,6 +2114,7 @@ class ServiceOrderService
         return [
             'order_id' => $orderId,
             'path' => '/pages/wedding_order_detail/wedding_order_detail?order_id=' . $orderId,
+            'target_role' => 'user',
         ];
     }
 
@@ -2122,6 +2123,7 @@ class ServiceOrderService
         return [
             'order_id' => $orderId,
             'path' => '/pages/provider_order_detail/provider_order_detail?order_id=' . $orderId,
+            'target_role' => 'provider',
         ];
     }
 
