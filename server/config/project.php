@@ -107,6 +107,7 @@ return [
         'trade' => [
             'online_pay_enabled' => 1,
             'offline_voucher_enabled' => 1,
+            'refund_apply_enabled' => 1,
             'provider_confirm_timeout_minutes' => 30,
             'pay_timeout_minutes' => 30,
         ],

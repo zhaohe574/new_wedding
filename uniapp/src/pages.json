@@ -164,6 +164,15 @@
             }
         },
         {
+            "path": "pages/provider_schedule/provider_schedule",
+            "style": {
+                "navigationBarTitleText": "档期管理"
+            },
+            "meta": {
+                "auth": true
+            }
+        },
+        {
             "path": "pages/dashboard/dashboard",
             "style": {
                 "navigationBarTitleText": "经营驾驶舱"

@@ -67,8 +67,15 @@ class ProviderScheduleLists extends BaseAdminDataLists implements ListsSearchInt
             ->toArray();
 
         $statusMap = ProviderScheduleService::getStatusMap();
+        $statusHintMap = ProviderScheduleService::getStatusHintMap();
         foreach ($lists as &$item) {
             $item['status_desc'] = $statusMap[$item['status']] ?? '-';
+            $item['status_hint'] = $statusHintMap[$item['status']] ?? '';
+            $item['source_desc'] = ProviderScheduleService::getSourceDesc((string)($item['source_type'] ?? ''));
+            $item['source_display'] = ProviderScheduleService::getSourceDisplay(
+                (string)($item['source_type'] ?? ''),
+                (int)($item['source_id'] ?? 0)
+            );
         }
 
         return $lists;

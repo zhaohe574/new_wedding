@@ -35,6 +35,7 @@ class RefundEnum
     // 退款订单类型
     const ORDER_TYPE_ORDER = 'order'; // 普通订单
     const ORDER_TYPE_RECHARGE = 'recharge'; // 充值订单
+    const ORDER_TYPE_SERVICE_ORDER = 'service_order'; // 婚庆服务订单
 
 
     /**

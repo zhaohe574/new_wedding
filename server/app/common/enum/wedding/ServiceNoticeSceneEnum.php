@@ -19,4 +19,6 @@ class ServiceNoticeSceneEnum
     public const ORDER_WAIT_REVIEW = 211;
     public const ORDER_REVIEW_SUBMITTED = 212;
     public const ORDER_REVIEW_RESULT = 213;
+    public const ORDER_REFUND_APPLIED = 214;
+    public const ORDER_REFUND_RESULT = 215;
 }

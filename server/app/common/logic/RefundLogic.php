@@ -21,6 +21,7 @@ use app\common\enum\RefundEnum;
 use app\common\model\recharge\RechargeOrder;
 use app\common\model\refund\RefundLog;
 use app\common\model\refund\RefundRecord;
+use app\common\service\ServiceOrderService;
 use app\common\service\pay\AliPayService;
 use app\common\service\pay\WeChatPayService;
 
@@ -151,8 +152,16 @@ class RefundLogic extends BaseLogic
                     'id' => $refundRecord['order_id'],
                     'refund_transaction_id' => $result['tradeNo'] ?? '',
                 ]);
+                return;
             }
+
+            if ($refundRecord['order_type'] == RefundEnum::ORDER_TYPE_SERVICE_ORDER) {
+                ServiceOrderService::handleRefundSuccessByRecordId((int)$refundRecordId);
+            }
+            return;
         }
+
+        throw new \Exception($result['sub_msg'] ?? $result['msg'] ?? '支付宝退款失败');
     }
 
 

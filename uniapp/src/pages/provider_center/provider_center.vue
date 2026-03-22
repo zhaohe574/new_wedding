@@ -7,7 +7,7 @@
             <view class="hero-card__eyebrow">服务人员工作台</view>
             <view class="hero-card__title">欢迎进入服务人员中心</view>
             <view class="hero-card__desc">
-                当前账号已开通服务人员权限。这里已升级为统一订单工作台入口，可继续处理接单、改期、履约完成与评价审核。
+                当前账号已开通服务人员权限。这里已升级为统一服务工作台入口，可继续处理档期维护、接单、改期、履约完成与评价审核。
             </view>
             <view class="hero-card__meta">服务人员 ID：{{ userInfo.provider_id || '-' }}</view>
         </view>
@@ -41,6 +41,10 @@
         <view class="panel-card mt-[24rpx]">
             <view class="panel-card__title">快捷入口</view>
             <view class="entry-grid">
+                <view class="entry-item" @click="navigateTo('/pages/provider_schedule/provider_schedule')">
+                    <view class="entry-item__title">档期管理</view>
+                    <view class="entry-item__desc">按自然日查看月视图档期，批量设为不可服务或恢复可预约</view>
+                </view>
                 <view class="entry-item" @click="navigateTo('/pages/provider_order_pending/provider_order_pending')">
                     <view class="entry-item__title">订单工作台</view>
                     <view class="entry-item__desc">查看全部订单、待履约、改期待处理与评价待审</view>
@@ -113,8 +117,8 @@ const capabilityList = computed(() => {
         },
         {
             title: '档期管理',
-            status: '基线已预留',
-            desc: '后续在此查看自然日档期状态，并维护不可服务日期。',
+            status: '自然日月视图已上线',
+            desc: '支持维护本人可预约与不可服务，已锁定与已占用保持只读展示。',
             enabled: true
         },
         {

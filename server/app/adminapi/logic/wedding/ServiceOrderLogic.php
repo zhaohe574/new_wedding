@@ -8,6 +8,7 @@ use app\common\logic\BaseLogic;
 use app\common\model\wedding\ServiceOrderChange;
 use app\common\model\wedding\ServiceOrder;
 use app\common\model\wedding\ServiceOrderOfflineVoucher;
+use app\common\model\wedding\ServiceOrderRefund;
 use app\common\model\wedding\ServiceOrderReview;
 use app\common\model\wedding\ServiceOrderSnapshot;
 use app\common\service\FileService;
@@ -47,6 +48,10 @@ class ServiceOrderLogic extends BaseLogic
             ->whereNull('delete_time')
             ->order(['id' => 'desc'])
             ->findOrEmpty();
+        $refund = ServiceOrderRefund::where(['order_id' => (int)$orderData['id']])
+            ->whereNull('delete_time')
+            ->order(['id' => 'desc'])
+            ->findOrEmpty();
         $review = ServiceOrderReview::where(['order_id' => (int)$orderData['id']])
             ->whereNull('delete_time')
             ->findOrEmpty();
@@ -54,6 +59,7 @@ class ServiceOrderLogic extends BaseLogic
         $snapshotData = $snapshot->isEmpty() ? [] : $snapshot->toArray();
         $voucherData = $voucher->isEmpty() ? [] : $voucher->toArray();
         $changeData = $change->isEmpty() ? [] : $change->append(['status_desc', 'handle_role_desc'])->toArray();
+        $refundData = $refund->isEmpty() ? [] : $refund->append(['status_desc', 'apply_source_desc'])->toArray();
         $reviewData = $review->isEmpty() ? [] : $review->append(['audit_status_desc', 'audit_role_desc'])->toArray();
         if (!empty($voucherData['voucher_images']) && is_array($voucherData['voucher_images'])) {
             $voucherData['voucher_images'] = array_values(array_map(function ($item) {
@@ -71,6 +77,7 @@ class ServiceOrderLogic extends BaseLogic
             'snapshot' => $snapshotData,
             'offline_voucher' => $voucherData,
             'latest_change' => $changeData,
+            'latest_refund' => $refundData,
             'review' => $reviewData,
         ];
     }

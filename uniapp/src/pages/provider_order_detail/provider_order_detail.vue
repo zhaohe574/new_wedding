@@ -74,6 +74,31 @@
             </view>
 
             <view class="panel-card mt-[24rpx]">
+                <view class="panel-card__title">退款进度</view>
+                <view v-if="!detail.latest_refund?.id" class="panel-card__desc">当前暂无退款记录。</view>
+                <template v-else>
+                    <view class="detail-list">
+                        <view class="detail-row">
+                            <view class="detail-row__label">处理状态</view>
+                            <view class="detail-row__value">{{ detail.latest_refund.status_desc || '-' }}</view>
+                        </view>
+                        <view class="detail-row">
+                            <view class="detail-row__label">退款金额</view>
+                            <view class="detail-row__value">￥{{ Number(detail.latest_refund.refund_amount || 0).toFixed(2) }}</view>
+                        </view>
+                        <view class="detail-row">
+                            <view class="detail-row__label">申请原因</view>
+                            <view class="detail-row__value">{{ detail.latest_refund.apply_reason || '-' }}</view>
+                        </view>
+                        <view class="detail-row">
+                            <view class="detail-row__label">处理备注</view>
+                            <view class="detail-row__value">{{ detail.latest_refund.handle_remark || '-' }}</view>
+                        </view>
+                    </view>
+                </template>
+            </view>
+
+            <view class="panel-card mt-[24rpx]">
                 <view class="panel-card__title">订单评价</view>
                 <view v-if="!detail.review?.id" class="panel-card__desc">当前暂未收到评价记录。</view>
                 <template v-else>
@@ -284,6 +309,7 @@ const detail = reactive<any>({
     snapshot: {},
     offline_voucher: {},
     latest_change: {},
+    latest_refund: {},
     review: {},
     action: {}
 })

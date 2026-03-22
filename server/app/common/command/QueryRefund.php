@@ -19,6 +19,8 @@ use app\common\enum\RefundEnum;
 use app\common\model\recharge\RechargeOrder;
 use app\common\model\refund\RefundLog;
 use app\common\model\refund\RefundRecord;
+use app\common\model\wedding\ServiceOrder;
+use app\common\service\ServiceOrderService;
 use app\common\service\pay\WeChatPayService;
 use think\console\Command;
 use think\console\Input;
@@ -61,6 +63,14 @@ class QueryRefund extends Command
                 $this->handleRechargeOrder($rechargeRecords);
             }
 
+            $serviceOrderRecords = array_filter($refundRecords, function ($item) {
+                return $item['order_type'] == RefundEnum::ORDER_TYPE_SERVICE_ORDER;
+            });
+
+            if (!empty($serviceOrderRecords)) {
+                $this->handleServiceOrder($serviceOrderRecords);
+            }
+
             return true;
         } catch (\Exception $e) {
             Log::write('订单退款状态查询失败,失败原因:' . $e->getMessage());
@@ -96,6 +106,39 @@ class QueryRefund extends Command
                 'record_id' => $record['record_id'],
                 'log_id' => $record['log_id'],
                 'log_sn' => $record['log_sn'],
+                'order_type' => RefundEnum::ORDER_TYPE_RECHARGE,
+                'pay_way' => $order['pay_way'],
+                'order_terminal' => $order['order_terminal'],
+            ]);
+        }
+    }
+
+    /**
+     * @notes 处理婚庆服务订单
+     * @param $refundRecords
+     * @author AI
+     * @date 2026/3/22
+     */
+    public function handleServiceOrder($refundRecords)
+    {
+        $orderIds = array_unique(array_column($refundRecords, 'order_id'));
+        $orders = ServiceOrder::whereIn('id', $orderIds)->column('*', 'id');
+
+        foreach ($refundRecords as $record) {
+            if (!isset($orders[$record['order_id']])) {
+                continue;
+            }
+
+            $order = $orders[$record['order_id']];
+            if (!in_array($order['pay_way'], [PayEnum::WECHAT_PAY, PayEnum::ALI_PAY], true)) {
+                continue;
+            }
+
+            $this->checkReFundStatus([
+                'record_id' => $record['record_id'],
+                'log_id' => $record['log_id'],
+                'log_sn' => $record['log_sn'],
+                'order_type' => RefundEnum::ORDER_TYPE_SERVICE_ORDER,
                 'pay_way' => $order['pay_way'],
                 'order_terminal' => $order['order_terminal'],
             ]);
@@ -127,8 +170,16 @@ class QueryRefund extends Command
 
         if (true === $result) {
             $this->updateRefundSuccess($refundData['log_id'], $refundData['record_id']);
+            if (($refundData['order_type'] ?? '') === RefundEnum::ORDER_TYPE_SERVICE_ORDER) {
+                ServiceOrderService::handleRefundSuccessByRecordId((int)$refundData['record_id']);
+            }
         } else {
-            $this->updateRefundMsg($refundData['log_id'], $result);
+            if (($refundData['order_type'] ?? '') === RefundEnum::ORDER_TYPE_SERVICE_ORDER) {
+                $this->updateRefundFail($refundData['log_id'], $refundData['record_id'], $result);
+                ServiceOrderService::handleRefundFailByRecordId((int)$refundData['record_id'], (string)$result);
+            } else {
+                $this->updateRefundMsg($refundData['log_id'], $result);
+            }
         }
         return true;
     }
@@ -151,6 +202,9 @@ class QueryRefund extends Command
 
         if (!empty($result['status']) && $result['status'] == 'SUCCESS') {
             return true;
+        }
+        if (!empty($result['status']) && in_array($result['status'], ['CLOSED', 'ABNORMAL'], true)) {
+            return '微信退款状态异常:' . $result['status'];
         }
 
         if (!empty($result['code']) || !empty($result['message'])) {
@@ -195,6 +249,28 @@ class QueryRefund extends Command
         // 更新日志
         RefundLog::update([
             'id' => $logId,
+            'refund_msg' => $msg,
+        ]);
+    }
+
+    /**
+     * @notes 更新退款为失败
+     * @param $logId
+     * @param $recordId
+     * @param $msg
+     * @author AI
+     * @date 2026/3/22
+     */
+    public function updateRefundFail($logId, $recordId, $msg)
+    {
+        RefundLog::update([
+            'id' => $logId,
+            'refund_status' => RefundEnum::REFUND_ERROR,
+            'refund_msg' => $msg,
+        ]);
+        RefundRecord::update([
+            'id' => $recordId,
+            'refund_status' => RefundEnum::REFUND_ERROR,
             'refund_msg' => $msg,
         ]);
     }

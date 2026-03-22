@@ -5,16 +5,22 @@ declare(strict_types=1);
 namespace app\common\service;
 
 use app\common\enum\PayEnum;
+use app\common\enum\RefundEnum;
 use app\common\enum\wedding\ServiceNoticeSceneEnum;
 use app\common\enum\wedding\ServiceOrderChangeEnum;
 use app\common\enum\wedding\ServiceOrderEnum;
 use app\common\enum\wedding\ServiceOrderOfflineVoucherEnum;
 use app\common\enum\wedding\ServiceOrderPaymentTypeEnum;
+use app\common\enum\wedding\ServiceOrderRefundEnum;
 use app\common\enum\wedding\ServiceOrderReviewEnum;
+use app\common\logic\RefundLogic;
+use app\common\model\refund\RefundLog;
+use app\common\model\refund\RefundRecord;
 use app\common\model\wedding\ProviderSchedule;
 use app\common\model\wedding\ServiceOrder;
 use app\common\model\wedding\ServiceOrderChange;
 use app\common\model\wedding\ServiceOrderOfflineVoucher;
+use app\common\model\wedding\ServiceOrderRefund;
 use app\common\model\wedding\ServiceOrderReview;
 use app\common\model\wedding\ServiceOrderSnapshot;
 use app\common\model\wedding\ServiceProvider;
@@ -226,6 +232,286 @@ class ServiceOrderService
         self::sendOfflineVoucherSubmittedNotice($orderId);
 
         return true;
+    }
+
+    public static function refundApplyByUser(int $userId, int $orderId, string $applyReason = ''): bool
+    {
+        $tradeConfig = self::getTradeConfig();
+        if ((int)($tradeConfig['refund_apply_enabled'] ?? 0) !== 1) {
+            throw new \RuntimeException('退款申请入口当前已关闭');
+        }
+        if (trim($applyReason) === '') {
+            throw new \RuntimeException('请填写退款原因');
+        }
+
+        $noticeData = [
+            'order_id' => 0,
+            'refund_amount' => 0,
+        ];
+
+        Db::transaction(function () use ($userId, $orderId, $applyReason, &$noticeData) {
+            $order = ServiceOrder::where([
+                'id' => $orderId,
+                'user_id' => $userId,
+            ])->whereNull('delete_time')->lock(true)->findOrEmpty();
+            if ($order->isEmpty()) {
+                throw new \RuntimeException('订单不存在');
+            }
+
+            self::assertRefundApplyOrder($order->toArray(), ServiceOrderRefundEnum::APPLY_SOURCE_USER);
+            self::assertNoPendingRefund((int)$order['id']);
+            self::assertNoPendingReschedule((int)$order['id']);
+
+            ServiceOrderRefund::create([
+                'order_id' => (int)$order['id'],
+                'user_id' => $userId,
+                'provider_id' => (int)$order['provider_id'],
+                'apply_source' => ServiceOrderRefundEnum::APPLY_SOURCE_USER,
+                'origin_order_status' => (int)$order['order_status'],
+                'refund_amount' => round((float)$order['order_amount'], 2),
+                'apply_reason' => trim($applyReason),
+                'status' => ServiceOrderRefundEnum::STATUS_PENDING,
+                'handle_by' => 0,
+                'handle_remark' => '',
+                'handle_time' => 0,
+                'refund_record_id' => 0,
+                'create_time' => time(),
+                'update_time' => time(),
+            ]);
+
+            $noticeData = [
+                'order_id' => (int)$order['id'],
+                'refund_amount' => round((float)$order['order_amount'], 2),
+            ];
+        });
+
+        self::sendRefundAppliedNotice($noticeData['order_id'], $noticeData['refund_amount']);
+        return true;
+    }
+
+    public static function adminHandleRefund(int $adminId, int $refundId, int $auditStatus, string $remark = ''): bool
+    {
+        if (!in_array($auditStatus, [1, 2], true)) {
+            throw new \RuntimeException('退款处理结果不正确');
+        }
+
+        $execution = [];
+        $noticeData = [
+            'order_id' => 0,
+            'refund_result' => '',
+        ];
+
+        Db::transaction(function () use ($adminId, $refundId, $auditStatus, $remark, &$execution, &$noticeData) {
+            $refund = ServiceOrderRefund::where(['id' => $refundId])
+                ->whereNull('delete_time')
+                ->lock(true)
+                ->findOrEmpty();
+            if ($refund->isEmpty()) {
+                throw new \RuntimeException('退款申请不存在');
+            }
+            if ((int)$refund['status'] !== ServiceOrderRefundEnum::STATUS_PENDING) {
+                throw new \RuntimeException('当前退款申请已处理');
+            }
+
+            $order = ServiceOrder::where(['id' => (int)$refund['order_id']])
+                ->whereNull('delete_time')
+                ->lock(true)
+                ->findOrEmpty();
+            if ($order->isEmpty()) {
+                throw new \RuntimeException('订单不存在');
+            }
+
+            if ($auditStatus === 2) {
+                ServiceOrderRefund::update([
+                    'id' => (int)$refund['id'],
+                    'status' => ServiceOrderRefundEnum::STATUS_REJECTED,
+                    'handle_by' => $adminId,
+                    'handle_remark' => trim($remark),
+                    'handle_time' => time(),
+                    'update_time' => time(),
+                ]);
+
+                $noticeData = [
+                    'order_id' => (int)$order['id'],
+                    'refund_result' => ServiceOrderRefundEnum::getStatusDesc(ServiceOrderRefundEnum::STATUS_REJECTED),
+                ];
+                return;
+            }
+
+            $execution = self::approveRefundRequestLocked($order, $refund, $adminId, $remark);
+        });
+
+        if ($auditStatus === 2) {
+            self::sendRefundResultNotice($noticeData['order_id'], $noticeData['refund_result']);
+            return true;
+        }
+
+        self::dispatchApprovedRefund($execution, $adminId);
+        return true;
+    }
+
+    public static function adminManualRefund(
+        int $adminId,
+        int $orderId,
+        string $applyReason,
+        string $handleRemark = ''
+    ): bool {
+        if (trim($applyReason) === '') {
+            throw new \RuntimeException('请填写退款原因');
+        }
+
+        $execution = [];
+
+        Db::transaction(function () use ($adminId, $orderId, $applyReason, $handleRemark, &$execution) {
+            $order = ServiceOrder::where(['id' => $orderId])
+                ->whereNull('delete_time')
+                ->lock(true)
+                ->findOrEmpty();
+            if ($order->isEmpty()) {
+                throw new \RuntimeException('订单不存在');
+            }
+
+            self::assertRefundApplyOrder($order->toArray(), ServiceOrderRefundEnum::APPLY_SOURCE_ADMIN);
+            self::assertNoPendingRefund((int)$order['id']);
+            self::assertNoPendingReschedule((int)$order['id']);
+
+            $refund = ServiceOrderRefund::create([
+                'order_id' => (int)$order['id'],
+                'user_id' => (int)$order['user_id'],
+                'provider_id' => (int)$order['provider_id'],
+                'apply_source' => ServiceOrderRefundEnum::APPLY_SOURCE_ADMIN,
+                'origin_order_status' => (int)$order['order_status'],
+                'refund_amount' => round((float)$order['order_amount'], 2),
+                'apply_reason' => trim($applyReason),
+                'status' => ServiceOrderRefundEnum::STATUS_PENDING,
+                'handle_by' => 0,
+                'handle_remark' => '',
+                'handle_time' => 0,
+                'refund_record_id' => 0,
+                'create_time' => time(),
+                'update_time' => time(),
+            ]);
+
+            $execution = self::approveRefundRequestLocked(
+                $order,
+                $refund,
+                $adminId,
+                trim($handleRemark) !== '' ? $handleRemark : '后台人工退款'
+            );
+        });
+
+        self::dispatchApprovedRefund($execution, $adminId);
+        return true;
+    }
+
+    public static function getLatestRefundByOrderId(int $orderId): ServiceOrderRefund
+    {
+        return ServiceOrderRefund::where(['order_id' => $orderId])
+            ->whereNull('delete_time')
+            ->order(['id' => 'desc'])
+            ->findOrEmpty();
+    }
+
+    public static function canUserApplyRefund(array $orderData, array $changeData = [], array $refundData = []): bool
+    {
+        $tradeConfig = self::getTradeConfig();
+        if ((int)($tradeConfig['refund_apply_enabled'] ?? 0) !== 1) {
+            return false;
+        }
+        if ((int)($orderData['pay_status'] ?? PayEnum::UNPAID) !== PayEnum::ISPAID) {
+            return false;
+        }
+        if (!in_array((int)($orderData['order_status'] ?? 0), [
+            ServiceOrderEnum::WAIT_SERVICE,
+            ServiceOrderEnum::IN_SERVICE,
+        ], true)) {
+            return false;
+        }
+        if ((int)($changeData['status'] ?? -1) === ServiceOrderChangeEnum::PENDING) {
+            return false;
+        }
+
+        return empty($refundData)
+            || in_array((int)($refundData['status'] ?? -1), ServiceOrderRefundEnum::getTerminalStatusList(), true);
+    }
+
+    public static function handleRefundSuccessByRecordId(int $refundRecordId): void
+    {
+        $orderId = 0;
+        $shouldNotify = false;
+
+        Db::transaction(function () use ($refundRecordId, &$orderId, &$shouldNotify) {
+            $refund = ServiceOrderRefund::where(['refund_record_id' => $refundRecordId])
+                ->whereNull('delete_time')
+                ->lock(true)
+                ->findOrEmpty();
+            if ($refund->isEmpty()) {
+                return;
+            }
+            if ((int)$refund['status'] === ServiceOrderRefundEnum::STATUS_REFUNDED) {
+                return;
+            }
+            if ((int)$refund['status'] === ServiceOrderRefundEnum::STATUS_REFUND_FAILED) {
+                return;
+            }
+
+            $order = ServiceOrder::where(['id' => (int)$refund['order_id']])
+                ->whereNull('delete_time')
+                ->lock(true)
+                ->findOrEmpty();
+            if ($order->isEmpty()) {
+                return;
+            }
+
+            self::syncRefundSuccessLocked($order, $refund);
+            $orderId = (int)$order['id'];
+            $shouldNotify = true;
+        });
+
+        if ($shouldNotify) {
+            self::sendRefundResultNotice(
+                $orderId,
+                ServiceOrderRefundEnum::getStatusDesc(ServiceOrderRefundEnum::STATUS_REFUNDED)
+            );
+        }
+    }
+
+    public static function handleRefundFailByRecordId(int $refundRecordId, string $refundRemark = ''): void
+    {
+        $orderId = 0;
+        $shouldNotify = false;
+
+        Db::transaction(function () use ($refundRecordId, $refundRemark, &$orderId, &$shouldNotify) {
+            $refund = ServiceOrderRefund::where(['refund_record_id' => $refundRecordId])
+                ->whereNull('delete_time')
+                ->lock(true)
+                ->findOrEmpty();
+            if ($refund->isEmpty()) {
+                return;
+            }
+            if ((int)$refund['status'] === ServiceOrderRefundEnum::STATUS_REFUNDED) {
+                return;
+            }
+
+            $order = ServiceOrder::where(['id' => (int)$refund['order_id']])
+                ->whereNull('delete_time')
+                ->lock(true)
+                ->findOrEmpty();
+            if ($order->isEmpty()) {
+                return;
+            }
+
+            self::syncRefundFailedLocked($order, $refund, $refundRemark);
+            $orderId = (int)$order['id'];
+            $shouldNotify = true;
+        });
+
+        if ($shouldNotify) {
+            self::sendRefundResultNotice(
+                $orderId,
+                ServiceOrderRefundEnum::getStatusDesc(ServiceOrderRefundEnum::STATUS_REFUND_FAILED)
+            );
+        }
     }
 
     public static function getProviderByUserId(int $userId): ServiceProvider
@@ -947,12 +1233,14 @@ class ServiceOrderService
             ->whereNull('delete_time')
             ->findOrEmpty();
         $latestChange = self::getLatestChangeByOrderId((int)$orderData['id']);
+        $latestRefund = self::getLatestRefundByOrderId((int)$orderData['id']);
         $review = self::getReviewByOrderId((int)$orderData['id']);
         $tradeConfig = self::getTradeConfig();
 
         $snapshotData = $snapshot->isEmpty() ? [] : $snapshot->toArray();
         $voucherData = $voucher->isEmpty() ? [] : $voucher->toArray();
         $changeData = $latestChange->isEmpty() ? [] : $latestChange->append(['status_desc', 'handle_role_desc'])->toArray();
+        $refundData = $latestRefund->isEmpty() ? [] : $latestRefund->append(['status_desc', 'apply_source_desc'])->toArray();
         $reviewData = $review->isEmpty() ? [] : $review->append(['audit_status_desc', 'audit_role_desc'])->toArray();
 
         if (!empty($voucherData['voucher_images']) && is_array($voucherData['voucher_images'])) {
@@ -964,6 +1252,9 @@ class ServiceOrderService
             $reviewData['images'] = array_values(array_map(function ($item) {
                 return FileService::getFileUrl((string)$item);
             }, $reviewData['images']));
+        }
+        if (!empty($refundData)) {
+            $refundData['refund_amount'] = round((float)($refundData['refund_amount'] ?? 0), 2);
         }
 
         $action = [
@@ -979,6 +1270,7 @@ class ServiceOrderService
                 && (int)$orderData['order_status'] === ServiceOrderEnum::WAIT_PAY
                 && (int)($tradeConfig['offline_voucher_enabled'] ?? 0) === 1,
             'can_apply_reschedule' => self::canUserApplyReschedule($orderData, $changeData),
+            'can_apply_refund' => $isUserView && self::canUserApplyRefund($orderData, $changeData, $refundData),
             'can_review' => $isUserView
                 && self::isReviewEnabled()
                 && (int)$orderData['order_status'] === ServiceOrderEnum::WAIT_REVIEW,
@@ -995,6 +1287,7 @@ class ServiceOrderService
 
         if (!$isUserView) {
             $action['can_cancel'] = false;
+            $action['can_apply_refund'] = false;
         }
 
         return [
@@ -1002,6 +1295,7 @@ class ServiceOrderService
             'snapshot' => $snapshotData,
             'offline_voucher' => $voucherData,
             'latest_change' => $changeData,
+            'latest_refund' => $refundData,
             'review' => $reviewData,
             'action' => $action,
             'pay_from' => self::PAY_FROM,
@@ -1032,6 +1326,268 @@ class ServiceOrderService
         $config = ServiceBusinessConfigService::getConfig();
         $mode = trim((string)($config['review']['order_review_mode'] ?? 'admin'));
         return in_array($mode, ['admin', 'provider', 'provider_then_admin'], true) ? $mode : 'admin';
+    }
+
+    private static function assertRefundApplyOrder(array $orderData, string $applySource): void
+    {
+        if ((int)($orderData['pay_status'] ?? PayEnum::UNPAID) !== PayEnum::ISPAID) {
+            throw new \RuntimeException('当前订单未支付，不能发起退款');
+        }
+
+        $allowedStatus = $applySource === ServiceOrderRefundEnum::APPLY_SOURCE_USER
+            ? [
+                ServiceOrderEnum::WAIT_SERVICE,
+                ServiceOrderEnum::IN_SERVICE,
+            ]
+            : [
+                ServiceOrderEnum::WAIT_SERVICE,
+                ServiceOrderEnum::IN_SERVICE,
+                ServiceOrderEnum::WAIT_REVIEW,
+                ServiceOrderEnum::REVIEW_PENDING_AUDIT,
+                ServiceOrderEnum::FINISHED,
+            ];
+
+        if (!in_array((int)($orderData['order_status'] ?? 0), $allowedStatus, true)) {
+            throw new \RuntimeException(
+                $applySource === ServiceOrderRefundEnum::APPLY_SOURCE_USER
+                    ? '当前订单状态不可申请退款'
+                    : '当前订单状态不可发起后台退款'
+            );
+        }
+    }
+
+    private static function assertNoPendingRefund(int $orderId): void
+    {
+        $pendingRefund = ServiceOrderRefund::where(['order_id' => $orderId])
+            ->whereNull('delete_time')
+            ->whereNotIn('status', ServiceOrderRefundEnum::getTerminalStatusList())
+            ->lock(true)
+            ->findOrEmpty();
+        if (!$pendingRefund->isEmpty()) {
+            throw new \RuntimeException('当前订单已有处理中退款申请');
+        }
+    }
+
+    private static function assertNoPendingReschedule(int $orderId): void
+    {
+        $pendingChange = ServiceOrderChange::where([
+            'order_id' => $orderId,
+            'status' => ServiceOrderChangeEnum::PENDING,
+        ])->whereNull('delete_time')->lock(true)->findOrEmpty();
+        if (!$pendingChange->isEmpty()) {
+            throw new \RuntimeException('当前订单存在待处理改期申请，暂不可发起退款');
+        }
+    }
+
+    private static function approveRefundRequestLocked(
+        ServiceOrder $order,
+        ServiceOrderRefund $refund,
+        int $adminId,
+        string $remark = ''
+    ): array {
+        $now = time();
+        $refundWay = RefundEnum::getRefundWayByPayWay((int)$order['pay_way']);
+        $refundAmount = round((float)$refund['refund_amount'], 2);
+        $handleRemark = trim($remark);
+
+        $record = RefundRecord::create([
+            'sn' => generate_sn(RefundRecord::class, 'sn'),
+            'user_id' => (int)$order['user_id'],
+            'order_id' => (int)$order['id'],
+            'order_sn' => (string)$order['sn'],
+            'order_type' => RefundEnum::ORDER_TYPE_SERVICE_ORDER,
+            'order_amount' => round((float)$order['order_amount'], 2),
+            'refund_amount' => $refundAmount,
+            'transaction_id' => trim((string)($order['transaction_id'] ?? '')),
+            'refund_way' => $refundWay,
+            'refund_type' => RefundEnum::TYPE_ADMIN,
+            'refund_status' => $refundWay === RefundEnum::REFUND_OFFLINE
+                ? RefundEnum::REFUND_SUCCESS
+                : RefundEnum::REFUND_ING,
+            'create_time' => $now,
+            'update_time' => $now,
+        ]);
+
+        if ($refundWay === RefundEnum::REFUND_OFFLINE) {
+            RefundLog::create([
+                'sn' => generate_sn(RefundLog::class, 'sn'),
+                'record_id' => (int)$record['id'],
+                'user_id' => (int)$order['user_id'],
+                'handle_id' => $adminId,
+                'order_amount' => round((float)$order['order_amount'], 2),
+                'refund_amount' => $refundAmount,
+                'refund_status' => RefundEnum::REFUND_SUCCESS,
+                'refund_msg' => '线下支付退款已人工登记完成',
+                'create_time' => $now,
+                'update_time' => $now,
+            ]);
+
+            ServiceOrderRefund::update([
+                'id' => (int)$refund['id'],
+                'status' => ServiceOrderRefundEnum::STATUS_REFUNDED,
+                'handle_by' => $adminId,
+                'handle_remark' => $handleRemark,
+                'handle_time' => $now,
+                'refund_record_id' => (int)$record['id'],
+                'update_time' => $now,
+            ]);
+
+            $freshOrder = ServiceOrder::where(['id' => (int)$order['id']])
+                ->whereNull('delete_time')
+                ->lock(true)
+                ->findOrEmpty();
+            $freshRefund = ServiceOrderRefund::where(['id' => (int)$refund['id']])
+                ->whereNull('delete_time')
+                ->lock(true)
+                ->findOrEmpty();
+            if (!$freshOrder->isEmpty() && !$freshRefund->isEmpty()) {
+                self::syncRefundSuccessLocked($freshOrder, $freshRefund);
+            }
+
+            return [
+                'completed' => true,
+                'order_id' => (int)$order['id'],
+                'refund_record_id' => (int)$record['id'],
+            ];
+        }
+
+        ServiceOrder::update([
+            'id' => (int)$order['id'],
+            'order_status' => ServiceOrderEnum::REFUNDING,
+            'update_time' => $now,
+        ]);
+        ServiceOrderRefund::update([
+            'id' => (int)$refund['id'],
+            'status' => ServiceOrderRefundEnum::STATUS_REFUNDING,
+            'handle_by' => $adminId,
+            'handle_remark' => $handleRemark,
+            'handle_time' => $now,
+            'refund_record_id' => (int)$record['id'],
+            'update_time' => $now,
+        ]);
+
+        return [
+            'completed' => false,
+            'refund_way' => $refundWay,
+            'order_id' => (int)$order['id'],
+            'refund_record_id' => (int)$record['id'],
+            'refund_amount' => $refundAmount,
+            'order' => $order->toArray(),
+        ];
+    }
+
+    private static function dispatchApprovedRefund(array $execution, int $adminId): void
+    {
+        if (empty($execution)) {
+            return;
+        }
+
+        if ((bool)($execution['completed'] ?? false) === true) {
+            self::sendRefundResultNotice(
+                (int)($execution['order_id'] ?? 0),
+                ServiceOrderRefundEnum::getStatusDesc(ServiceOrderRefundEnum::STATUS_REFUNDED)
+            );
+            return;
+        }
+
+        $refundRecordId = (int)($execution['refund_record_id'] ?? 0);
+        $order = $execution['order'] ?? [];
+        $refundAmount = round((float)($execution['refund_amount'] ?? 0), 2);
+        if ($refundRecordId <= 0 || empty($order)) {
+            throw new \RuntimeException('退款执行数据异常');
+        }
+
+        $result = RefundLogic::refund($order, $refundRecordId, $refundAmount, $adminId);
+        if ($result !== true) {
+            self::handleRefundFailByRecordId($refundRecordId, RefundLogic::getError());
+            throw new \RuntimeException(RefundLogic::getError());
+        }
+    }
+
+    private static function syncRefundSuccessLocked(ServiceOrder $order, ServiceOrderRefund $refund): void
+    {
+        $now = time();
+
+        ServiceOrder::update([
+            'id' => (int)$order['id'],
+            'order_status' => ServiceOrderEnum::REFUNDED,
+            'update_time' => $now,
+        ]);
+        ServiceOrderRefund::update([
+            'id' => (int)$refund['id'],
+            'status' => ServiceOrderRefundEnum::STATUS_REFUNDED,
+            'update_time' => $now,
+        ]);
+
+        self::closePendingRescheduleRequests((int)$order['id'], '订单已退款，改期申请已自动关闭');
+        self::releaseOrderOccupiedScheduleIfNeeded($order->toArray());
+    }
+
+    private static function syncRefundFailedLocked(
+        ServiceOrder $order,
+        ServiceOrderRefund $refund,
+        string $refundRemark = ''
+    ): void {
+        $now = time();
+        ServiceOrderRefund::update([
+            'id' => (int)$refund['id'],
+            'status' => ServiceOrderRefundEnum::STATUS_REFUND_FAILED,
+            'handle_remark' => self::buildRefundFailureRemark((string)($refund['handle_remark'] ?? ''), $refundRemark),
+            'handle_time' => (int)($refund['handle_time'] ?? 0) > 0 ? (int)$refund['handle_time'] : $now,
+            'update_time' => $now,
+        ]);
+
+        if ((int)$order['order_status'] === ServiceOrderEnum::REFUNDING) {
+            ServiceOrder::update([
+                'id' => (int)$order['id'],
+                'order_status' => (int)$refund['origin_order_status'],
+                'update_time' => $now,
+            ]);
+        }
+    }
+
+    private static function releaseOrderOccupiedScheduleIfNeeded(array $orderData): void
+    {
+        $schedule = ProviderSchedule::where([
+            'provider_id' => (int)$orderData['provider_id'],
+            'service_date' => (string)$orderData['service_date'],
+        ])->whereNull('delete_time')->lock(true)->findOrEmpty();
+
+        if ($schedule->isEmpty()) {
+            return;
+        }
+        if ((string)$schedule['status'] !== ProviderScheduleService::STATUS_OCCUPIED) {
+            return;
+        }
+        if ((string)$schedule['source_type'] !== WeddingOrderScheduleService::SOURCE_PENDING_ORDER) {
+            return;
+        }
+        if ((int)$schedule['source_id'] !== (int)$orderData['id']) {
+            return;
+        }
+
+        ProviderScheduleService::releaseOccupied(
+            (int)$orderData['provider_id'],
+            (string)$orderData['service_date'],
+            WeddingOrderScheduleService::SOURCE_PENDING_ORDER,
+            (int)$orderData['id']
+        );
+    }
+
+    private static function buildRefundFailureRemark(string $originRemark, string $refundRemark): string
+    {
+        $originRemark = trim($originRemark);
+        $refundRemark = trim($refundRemark);
+        if ($refundRemark === '') {
+            return $originRemark;
+        }
+        if ($originRemark === '') {
+            return '退款失败：' . $refundRemark;
+        }
+        if (mb_strpos($originRemark, $refundRemark) !== false) {
+            return $originRemark;
+        }
+        return $originRemark . '；退款失败：' . $refundRemark;
     }
 
     private static function shouldAutoCloseTimedOutOrder(array $orderData, int $expectedStatus, int $now): bool
@@ -1486,6 +2042,44 @@ class ServiceOrderService
         );
     }
 
+    private static function sendRefundAppliedNotice(int $orderId, float $refundAmount): void
+    {
+        if ($orderId <= 0) {
+            return;
+        }
+
+        $order = self::getOrderById($orderId);
+        if ($order->isEmpty()) {
+            return;
+        }
+
+        ServiceOrderNoticeService::sendByScene(
+            ServiceNoticeSceneEnum::ORDER_REFUND_APPLIED,
+            (int)$order['user_id'],
+            self::buildRefundNoticeParams($order->toArray(), $refundAmount),
+            self::buildUserOrderNoticeExtra((int)$order['id'])
+        );
+    }
+
+    private static function sendRefundResultNotice(int $orderId, string $refundResult): void
+    {
+        if ($orderId <= 0) {
+            return;
+        }
+
+        $order = self::getOrderById($orderId);
+        if ($order->isEmpty()) {
+            return;
+        }
+
+        ServiceOrderNoticeService::sendByScene(
+            ServiceNoticeSceneEnum::ORDER_REFUND_RESULT,
+            (int)$order['user_id'],
+            self::buildRefundNoticeParams($order->toArray(), 0, $refundResult),
+            self::buildUserOrderNoticeExtra((int)$order['id'])
+        );
+    }
+
     private static function buildOrderNoticeParams(array $orderData): array
     {
         self::appendOrderDesc($orderData);
@@ -1497,6 +2091,22 @@ class ServiceOrderService
             'order_amount' => number_format((float)($orderData['order_amount'] ?? 0), 2, '.', ''),
             'order_status_desc' => (string)($orderData['order_status_desc'] ?? ''),
         ];
+    }
+
+    private static function buildRefundNoticeParams(
+        array $orderData,
+        float $refundAmount = 0,
+        string $refundResult = ''
+    ): array {
+        $params = self::buildOrderNoticeParams($orderData);
+        $params['refund_amount'] = number_format(
+            $refundAmount > 0 ? $refundAmount : (float)($orderData['order_amount'] ?? 0),
+            2,
+            '.',
+            ''
+        );
+        $params['refund_result'] = trim($refundResult);
+        return $params;
     }
 
     private static function buildUserOrderNoticeExtra(int $orderId): array

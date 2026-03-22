@@ -17,21 +17,53 @@ class WeddingWorkbenchStatService
     public static function getOverview(): array
     {
         [$todayStart, $todayEnd] = self::getDayRange(0);
+        $time = date('Y-m-d H:i:s');
+        $todayOrderCount = self::countOrdersByCreateTime($todayStart, $todayEnd);
+        $totalOrderCount = self::countAllOrders();
+        $todayPaidAmount = self::sumPaidAmount($todayStart, $todayEnd);
+        $totalPaidAmount = self::sumPaidAmount();
+        $waitProviderConfirmCount = self::countOrdersByStatus(ServiceOrderEnum::WAIT_PROVIDER_CONFIRM);
+        $waitOfflineVoucherAuditCount = self::countOrdersByStatus(ServiceOrderEnum::WAIT_OFFLINE_VOUCHER_AUDIT);
+        $waitRescheduleCount = self::countPendingReschedules();
+        $waitReviewAuditCount = self::countPendingReviews();
+        $orderTrend = self::buildOrderTrend(15);
+        $paymentTrend = self::buildPaymentTrend(7);
 
         return [
+            'time' => $time,
             'today' => [
-                'time' => date('Y-m-d H:i:s'),
-                'today_order_count' => self::countOrdersByCreateTime($todayStart, $todayEnd),
-                'total_order_count' => self::countAllOrders(),
-                'today_paid_amount' => self::sumPaidAmount($todayStart, $todayEnd),
-                'total_paid_amount' => self::sumPaidAmount(),
-                'wait_provider_confirm_count' => self::countOrdersByStatus(ServiceOrderEnum::WAIT_PROVIDER_CONFIRM),
-                'wait_offline_voucher_audit_count' => self::countOrdersByStatus(ServiceOrderEnum::WAIT_OFFLINE_VOUCHER_AUDIT),
-                'wait_reschedule_count' => self::countPendingReschedules(),
-                'wait_review_audit_count' => self::countPendingReviews(),
+                'time' => $time,
+                'today_order_count' => $todayOrderCount,
+                'total_order_count' => $totalOrderCount,
+                'today_paid_amount' => $todayPaidAmount,
+                'total_paid_amount' => $totalPaidAmount,
+                'wait_provider_confirm_count' => $waitProviderConfirmCount,
+                'wait_offline_voucher_audit_count' => $waitOfflineVoucherAuditCount,
+                'wait_reschedule_count' => $waitRescheduleCount,
+                'wait_review_audit_count' => $waitReviewAuditCount,
+                'order_count' => $todayOrderCount,
+                'order_total_count' => $totalOrderCount,
+                'paid_amount' => $todayPaidAmount,
+                'paid_total_amount' => $totalPaidAmount,
             ],
-            'order_trend' => self::buildOrderTrend(15),
-            'payment_trend' => self::buildPaymentTrend(7),
+            'todo' => [
+                'wait_provider_confirm_count' => $waitProviderConfirmCount,
+                'wait_offline_voucher_audit_count' => $waitOfflineVoucherAuditCount,
+                'wait_reschedule_count' => $waitRescheduleCount,
+                'wait_review_audit_count' => $waitReviewAuditCount,
+            ],
+            'order_trend' => [
+                'date' => $orderTrend['date'],
+                'data' => $orderTrend['data'],
+                'labels' => $orderTrend['date'],
+                'values' => $orderTrend['data'],
+            ],
+            'payment_trend' => [
+                'date' => $paymentTrend['date'],
+                'data' => $paymentTrend['data'],
+                'labels' => $paymentTrend['date'],
+                'values' => $paymentTrend['data'],
+            ],
         ];
     }
 
@@ -121,7 +153,7 @@ class WeddingWorkbenchStatService
     {
         $date = [];
         $data = [];
-        for ($i = 0; $i < $days; $i++) {
+        for ($i = $days - 1; $i >= 0; $i--) {
             [$start, $end] = self::getDayRange($i);
             $date[] = date('m/d', $start);
             $data[] = self::countOrdersByCreateTime($start, $end);
@@ -136,7 +168,7 @@ class WeddingWorkbenchStatService
     {
         $date = [];
         $data = [];
-        for ($i = 0; $i < $days; $i++) {
+        for ($i = $days - 1; $i >= 0; $i--) {
             [$start, $end] = self::getDayRange($i);
             $date[] = date('m/d', $start);
             $data[] = self::formatAmount(self::sumPaidAmount($start, $end));

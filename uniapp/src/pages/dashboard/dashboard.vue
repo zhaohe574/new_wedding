@@ -5,9 +5,15 @@
     <view class="dashboard-page min-h-screen px-[24rpx] py-[24rpx] box-border">
         <view class="dashboard-hero">
             <view class="dashboard-hero__eyebrow">经营驾驶舱</view>
-            <view class="dashboard-hero__title">婚庆预约业务数据总览</view>
+            <view class="dashboard-hero__title">婚庆预约经营总览</view>
             <view class="dashboard-hero__desc">
-                当前页面已完成只读权限基线打通。后续会接入真实订单、支付、退款、改期与评价聚合指标。
+                面向只读查看用户展示真实订单、支付、改期与评价待办，统计口径与后台工作台保持一致。
+            </view>
+            <view class="dashboard-hero__meta">
+                <view class="dashboard-badge">更新时间 {{ overview.time || '--' }}</view>
+                <view class="dashboard-badge dashboard-badge--soft">
+                    驾驶舱权限 {{ userInfo.can_view_dashboard ? '已开通' : '未开通' }}
+                </view>
             </view>
         </view>
 
@@ -19,8 +25,45 @@
             </view>
         </view>
 
-        <view class="rule-panel">
-            <view class="rule-panel__title">当前规则摘要</view>
+        <view class="panel-card mt-[24rpx]">
+            <view class="panel-card__title">待办摘要</view>
+            <view class="todo-grid">
+                <view v-for="item in todoList" :key="item.label" class="todo-item">
+                    <view class="todo-item__label">{{ item.label }}</view>
+                    <view class="todo-item__value">{{ item.value }}</view>
+                    <view class="todo-item__desc">{{ item.desc }}</view>
+                </view>
+            </view>
+        </view>
+
+        <view class="panel-card mt-[24rpx]">
+            <view class="panel-card__title">近 7 日订单趋势</view>
+            <view class="trend-list">
+                <view v-for="item in orderTrendList" :key="item.label" class="trend-row">
+                    <view class="trend-row__label">{{ item.label }}</view>
+                    <view class="trend-row__track">
+                        <view class="trend-row__bar" :style="{ width: `${item.width}%` }"></view>
+                    </view>
+                    <view class="trend-row__value">{{ item.value }}</view>
+                </view>
+            </view>
+        </view>
+
+        <view class="panel-card mt-[24rpx]">
+            <view class="panel-card__title">近 7 日支付趋势</view>
+            <view class="trend-list">
+                <view v-for="item in paymentTrendList" :key="item.label" class="trend-row trend-row--gold">
+                    <view class="trend-row__label">{{ item.label }}</view>
+                    <view class="trend-row__track">
+                        <view class="trend-row__bar" :style="{ width: `${item.width}%` }"></view>
+                    </view>
+                    <view class="trend-row__value">{{ item.value }}</view>
+                </view>
+            </view>
+        </view>
+
+        <view class="panel-card mt-[24rpx]">
+            <view class="panel-card__title">当前规则摘要</view>
             <view class="rule-list">
                 <view v-for="item in ruleList" :key="item.label" class="rule-item">
                     <view class="rule-item__label">{{ item.label }}</view>
@@ -32,8 +75,11 @@
 </template>
 
 <script setup lang="ts">
+import { getWeddingDashboardOverview } from '@/api/wedding'
 import { useAppStore } from '@/stores/app'
-import { computed } from 'vue'
+import { useUserStore } from '@/stores/user'
+import { storeToRefs } from 'pinia'
+import { computed, reactive } from 'vue'
 
 const reviewModeLabelMap: Record<string, string> = {
     admin: '管理员审核',
@@ -42,33 +88,108 @@ const reviewModeLabelMap: Record<string, string> = {
 }
 
 const appStore = useAppStore()
+const userStore = useUserStore()
+const { userInfo } = storeToRefs(userStore)
 const serviceBusinessConfig = computed(() => appStore.getServiceBusinessConfig || {})
+const overview = reactive<Record<string, any>>({
+    time: '',
+    today: {},
+    todo: {},
+    order_trend: {
+        labels: [],
+        values: []
+    },
+    payment_trend: {
+        labels: [],
+        values: []
+    }
+})
+
+const formatAmount = (value: number | string | undefined) => {
+    const amount = Number(value || 0)
+    return `￥${amount.toFixed(2)}`
+}
+
+const buildTrendList = (
+    labels: string[] = [],
+    values: Array<number | string> = [],
+    valueFormatter?: (value: number) => string
+) => {
+    const numericValues = values.map((item) => Number(item || 0))
+    const maxValue = Math.max(...numericValues, 1)
+    return labels.map((label, index) => {
+        const value = numericValues[index] || 0
+        return {
+            label,
+            value: valueFormatter ? valueFormatter(value) : `${value}`,
+            width: Math.max(12, Math.round((value / maxValue) * 100))
+        }
+    })
+}
 
 const statsList = computed(() => {
-    const config = serviceBusinessConfig.value
+    const today = overview.today || {}
     return [
         {
-            title: '在线支付',
-            value: Number(config.trade?.online_pay_enabled ?? 0) === 1 ? '开启' : '关闭',
-            hint: `支付超时 ${config.trade?.pay_timeout_minutes || 30} 分钟`
+            title: '今日订单',
+            value: `${today.today_order_count ?? 0}`,
+            hint: `累计订单 ${today.total_order_count ?? 0}`
         },
         {
-            title: '线下凭证',
-            value: Number(config.trade?.offline_voucher_enabled ?? 0) === 1 ? '开启' : '关闭',
-            hint: '后续接入线下支付凭证审核链路'
+            title: '今日支付',
+            value: formatAmount(today.today_paid_amount),
+            hint: `累计支付 ${formatAmount(today.total_paid_amount)}`
         },
         {
-            title: '站内通知',
-            value: Number(config.notice?.system_notice_enabled ?? 0) === 1 ? '开启' : '关闭',
-            hint: '用于订单、改期、退款等关键节点提醒'
+            title: '待服务人员确认',
+            value: `${today.wait_provider_confirm_count ?? 0}`,
+            hint: '订单已锁档，等待服务人员处理'
         },
         {
-            title: '企业微信',
-            value: Number(config.notice?.work_wechat_notice_enabled ?? 0) === 1 ? '开启' : '关闭',
-            hint: '后续用于服务人员关键待办提醒'
+            title: '待线下凭证审核',
+            value: `${today.wait_offline_voucher_audit_count ?? 0}`,
+            hint: '需要后台尽快完成人工核验'
         }
     ]
 })
+
+const todoList = computed(() => {
+    const todo = overview.todo || {}
+    return [
+        {
+            label: '待改期处理',
+            value: `${todo.wait_reschedule_count ?? 0}`,
+            desc: '用户已提交改期申请，等待服务人员或后台处理'
+        },
+        {
+            label: '待评价审核',
+            value: `${todo.wait_review_audit_count ?? 0}`,
+            desc: '未审核通过前不会公开展示，也不会进入经营统计'
+        },
+        {
+            label: '待服务人员确认',
+            value: `${todo.wait_provider_confirm_count ?? 0}`,
+            desc: '接单前订单继续保持锁档状态'
+        },
+        {
+            label: '待凭证审核',
+            value: `${todo.wait_offline_voucher_audit_count ?? 0}`,
+            desc: '线下支付凭证正在等待人工核验'
+        }
+    ]
+})
+
+const orderTrendList = computed(() =>
+    buildTrendList(overview.order_trend?.labels || [], overview.order_trend?.values || []).slice(-7)
+)
+
+const paymentTrendList = computed(() =>
+    buildTrendList(
+        overview.payment_trend?.labels || [],
+        overview.payment_trend?.values || [],
+        (value) => formatAmount(value)
+    ).slice(-7)
+)
 
 const ruleList = computed(() => {
     const config = serviceBusinessConfig.value
@@ -79,7 +200,9 @@ const ruleList = computed(() => {
         },
         {
             label: '评论审核模式',
-            value: reviewModeLabelMap[config.review?.comment_review_mode || 'provider_then_admin'] || '服务人员初审后管理员终审'
+            value:
+                reviewModeLabelMap[config.review?.comment_review_mode || 'provider_then_admin'] ||
+                '服务人员初审后管理员终审'
         },
         {
             label: '动态发布',
@@ -91,17 +214,27 @@ const ruleList = computed(() => {
         }
     ]
 })
+
+const loadOverview = async () => {
+    const data = await getWeddingDashboardOverview()
+    Object.assign(overview, data || {})
+}
+
+onShow(() => {
+    loadOverview()
+})
 </script>
 
 <style lang="scss" scoped>
 .dashboard-page {
     background:
-        radial-gradient(circle at top left, rgba(219, 39, 119, 0.12), transparent 24%),
+        radial-gradient(circle at top left, rgba(219, 39, 119, 0.14), transparent 26%),
         radial-gradient(circle at right bottom, rgba(202, 138, 4, 0.12), transparent 24%),
-        linear-gradient(180deg, #fffdf9, #f7f3ef 44%, #f6f2ef);
+        linear-gradient(180deg, #fdf2f8, #fbf7f3 44%, #f7f3ef);
 }
 
-.dashboard-hero {
+.dashboard-hero,
+.panel-card {
     padding: 36rpx 32rpx;
     border-radius: 28rpx;
     background: rgba(255, 255, 255, 0.94);
@@ -127,6 +260,26 @@ const ruleList = computed(() => {
     color: #6b7280;
     font-size: 26rpx;
     line-height: 1.8;
+}
+
+.dashboard-hero__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16rpx;
+    margin-top: 24rpx;
+}
+
+.dashboard-badge {
+    padding: 12rpx 20rpx;
+    border-radius: 999rpx;
+    background: rgba(157, 23, 77, 0.08);
+    color: #9d174d;
+    font-size: 22rpx;
+}
+
+.dashboard-badge--soft {
+    background: rgba(202, 138, 4, 0.10);
+    color: #a16207;
 }
 
 .stats-grid {
@@ -163,19 +316,89 @@ const ruleList = computed(() => {
     line-height: 1.7;
 }
 
-.rule-panel {
-    margin-top: 24rpx;
-    padding: 28rpx;
-    border-radius: 24rpx;
-    background: rgba(255, 255, 255, 0.92);
-    border: 1rpx solid rgba(219, 39, 119, 0.12);
-    box-shadow: 0 18rpx 48rpx rgba(31, 41, 55, 0.05);
-}
-
-.rule-panel__title {
+.panel-card__title {
     color: #111827;
     font-size: 30rpx;
     font-weight: 600;
+}
+
+.todo-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18rpx;
+    margin-top: 22rpx;
+}
+
+.todo-item {
+    padding: 22rpx;
+    border-radius: 22rpx;
+    background: linear-gradient(180deg, #fff8fb, #fffef9);
+    border: 1rpx solid rgba(219, 39, 119, 0.10);
+}
+
+.todo-item__label {
+    color: #6b7280;
+    font-size: 22rpx;
+}
+
+.todo-item__value {
+    margin-top: 12rpx;
+    color: #111827;
+    font-size: 42rpx;
+    font-weight: 600;
+}
+
+.todo-item__desc {
+    margin-top: 10rpx;
+    color: #6b7280;
+    font-size: 22rpx;
+    line-height: 1.7;
+}
+
+.trend-list {
+    display: grid;
+    gap: 16rpx;
+    margin-top: 22rpx;
+}
+
+.trend-row {
+    display: grid;
+    grid-template-columns: 88rpx minmax(0, 1fr) 150rpx;
+    align-items: center;
+    gap: 18rpx;
+}
+
+.trend-row__label {
+    color: #6b7280;
+    font-size: 22rpx;
+}
+
+.trend-row__track {
+    height: 16rpx;
+    border-radius: 999rpx;
+    background: rgba(219, 39, 119, 0.08);
+    overflow: hidden;
+}
+
+.trend-row__bar {
+    height: 100%;
+    border-radius: 999rpx;
+    background: linear-gradient(90deg, #db2777, #f472b6);
+}
+
+.trend-row--gold .trend-row__track {
+    background: rgba(202, 138, 4, 0.10);
+}
+
+.trend-row--gold .trend-row__bar {
+    background: linear-gradient(90deg, #d97706, #f59e0b);
+}
+
+.trend-row__value {
+    color: #111827;
+    font-size: 22rpx;
+    font-weight: 600;
+    text-align: right;
 }
 
 .rule-list {
@@ -205,5 +428,16 @@ const ruleList = computed(() => {
     font-size: 24rpx;
     font-weight: 600;
     text-align: right;
+}
+
+@media (max-width: 480px) {
+    .stats-grid,
+    .todo-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .trend-row {
+        grid-template-columns: 72rpx minmax(0, 1fr) 132rpx;
+    }
 }
 </style>

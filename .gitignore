@@ -24,3 +24,9 @@ __pycache__/
 *.pyc
 *.tsbuildinfo
 temp_test_patch.txt
+
+# Frontend build artifacts
+admin/dist/
+uniapp/dist/
+server/public/admin/
+server/public/mobile/

@@ -60,6 +60,13 @@
                     </el-button>
                 </el-form-item>
             </el-form>
+
+            <div class="legend-grid">
+                <div v-for="item in statusLegend" :key="item.value" class="legend-item">
+                    <span class="legend-item__title">{{ item.label }}</span>
+                    <span class="legend-item__desc">{{ item.desc }}</span>
+                </div>
+            </div>
         </el-card>
 
         <el-card class="!border-none mt-4" shadow="never">
@@ -67,8 +74,22 @@
                 <el-table-column label="服务人员" prop="provider_name" min-width="150" />
                 <el-table-column label="服务分类" prop="category_name" min-width="120" />
                 <el-table-column label="服务日期" prop="service_date" min-width="120" />
-                <el-table-column label="状态" prop="status_desc" min-width="100" />
-                <el-table-column label="来源" prop="source_type" min-width="100" />
+                <el-table-column label="状态" min-width="180">
+                    <template #default="{ row }">
+                        <div class="status-cell">
+                            <span class="status-cell__title">{{ row.status_desc }}</span>
+                            <span class="status-cell__desc">{{ row.status_hint || '-' }}</span>
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="锁定来源" min-width="160">
+                    <template #default="{ row }">
+                        <div class="status-cell">
+                            <span class="status-cell__title">{{ row.source_desc || '-' }}</span>
+                            <span class="status-cell__desc">{{ row.source_display || '-' }}</span>
+                        </div>
+                    </template>
+                </el-table-column>
                 <el-table-column label="备注" prop="remark" min-width="220" show-overflow-tooltip />
                 <el-table-column label="操作" width="120" fixed="right">
                     <template #default="{ row }">
@@ -102,6 +123,13 @@ const statusOptions = [
     { label: '已锁定', value: 'locked' },
     { label: '已占用', value: 'occupied' },
     { label: '不可服务', value: 'unavailable' }
+]
+
+const statusLegend = [
+    { label: '可预约', value: 'available', desc: '无显式限制记录，可继续接单。' },
+    { label: '已锁定', value: 'locked', desc: '订单待确认阶段锁档，仅可只读查看。' },
+    { label: '已占用', value: 'occupied', desc: '订单已确认占用，需随订单流转释放。' },
+    { label: '不可服务', value: 'unavailable', desc: '人工设为不可服务，可恢复为可预约。' }
 ]
 
 const queryParams = reactive({
@@ -223,5 +251,50 @@ getLists()
     color: #111827;
     font-size: 18px;
     font-weight: 600;
+}
+
+.legend-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.legend-item {
+    border: 1px solid rgba(219, 39, 119, 0.12);
+    border-radius: 16px;
+    background: linear-gradient(180deg, #fff9fb, #fffdf9);
+    padding: 14px 16px;
+}
+
+.legend-item__title {
+    display: block;
+    color: #111827;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.legend-item__desc {
+    display: block;
+    color: #6b7280;
+    font-size: 12px;
+    line-height: 1.7;
+    margin-top: 8px;
+}
+
+.status-cell {
+    display: grid;
+    gap: 4px;
+}
+
+.status-cell__title {
+    color: #111827;
+    font-weight: 600;
+}
+
+.status-cell__desc {
+    color: #6b7280;
+    font-size: 12px;
+    line-height: 1.6;
 }
 </style>

@@ -36,6 +36,9 @@
                 <el-form-item label="开启线下凭证">
                     <el-switch v-model="formData.trade.offline_voucher_enabled" :active-value="1" :inactive-value="0" />
                 </el-form-item>
+                <el-form-item label="开启用户退款申请">
+                    <el-switch v-model="formData.trade.refund_apply_enabled" :active-value="1" :inactive-value="0" />
+                </el-form-item>
                 <el-form-item label="待确认超时（分钟）">
                     <div class="w-[240px]">
                         <el-input-number v-model="formData.trade.provider_confirm_timeout_minutes" :min="1" :max="1440" />
@@ -194,6 +197,7 @@ const createDefaultForm = () => ({
     trade: {
         online_pay_enabled: 1,
         offline_voucher_enabled: 1,
+        refund_apply_enabled: 1,
         provider_confirm_timeout_minutes: 30,
         pay_timeout_minutes: 30
     },

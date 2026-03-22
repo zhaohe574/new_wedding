@@ -67,7 +67,7 @@
                 <el-table-column label="支付类型" prop="payment_type_desc" min-width="110" />
                 <el-table-column label="支付状态" prop="pay_status_desc" min-width="100" />
                 <el-table-column label="凭证审核" prop="voucher_audit_status_desc" min-width="110" />
-                <el-table-column label="操作" width="170" fixed="right">
+                <el-table-column label="操作" width="220" fixed="right">
                     <template #default="{ row }">
                         <el-button v-perms="['wedding.service_order/detail']" type="primary" link @click="openDetail(row.id)">
                             详情
@@ -80,6 +80,15 @@
                             @click="openAudit(row.id)"
                         >
                             审核
+                        </el-button>
+                        <el-button
+                            v-if="canManualRefund(row)"
+                            v-perms="['wedding.service_order_refund/manualRefund']"
+                            type="danger"
+                            link
+                            @click="openManualRefund(row)"
+                        >
+                            后台退款
                         </el-button>
                     </template>
                 </el-table-column>
@@ -141,6 +150,21 @@
                         </div>
                     </template>
                 </el-card>
+
+                <el-card class="mt-4" shadow="never">
+                    <template #header>最新退款进度</template>
+                    <el-empty v-if="!detailData.latest_refund.id" description="暂无退款记录" />
+                    <template v-else>
+                        <el-descriptions :column="2" border>
+                            <el-descriptions-item label="处理状态">{{ detailData.latest_refund.status_desc || '-' }}</el-descriptions-item>
+                            <el-descriptions-item label="申请来源">{{ detailData.latest_refund.apply_source_desc || '-' }}</el-descriptions-item>
+                            <el-descriptions-item label="退款金额">￥{{ Number(detailData.latest_refund.refund_amount || 0).toFixed(2) }}</el-descriptions-item>
+                            <el-descriptions-item label="处理时间">{{ formatTime(detailData.latest_refund.handle_time) }}</el-descriptions-item>
+                            <el-descriptions-item :span="2" label="申请原因">{{ detailData.latest_refund.apply_reason || '-' }}</el-descriptions-item>
+                            <el-descriptions-item :span="2" label="处理备注">{{ detailData.latest_refund.handle_remark || '-' }}</el-descriptions-item>
+                        </el-descriptions>
+                    </template>
+                </el-card>
             </template>
         </el-dialog>
 
@@ -168,11 +192,43 @@
                 <el-button type="primary" @click="submitAudit">确认审核</el-button>
             </template>
         </el-dialog>
+
+        <el-dialog v-model="manualRefundVisible" title="后台退款" width="560px" destroy-on-close>
+            <el-form :model="manualRefundForm" label-width="88px">
+                <el-form-item label="订单号">
+                    <div class="text-[#374151]">{{ manualRefundForm.order_sn || '-' }}</div>
+                </el-form-item>
+                <el-form-item label="退款原因">
+                    <el-input
+                        v-model="manualRefundForm.apply_reason"
+                        type="textarea"
+                        :rows="4"
+                        maxlength="500"
+                        show-word-limit
+                        placeholder="请填写后台退款原因"
+                    />
+                </el-form-item>
+                <el-form-item label="处理备注">
+                    <el-input
+                        v-model="manualRefundForm.handle_remark"
+                        type="textarea"
+                        :rows="4"
+                        maxlength="500"
+                        show-word-limit
+                        placeholder="请填写处理备注（选填）"
+                    />
+                </el-form-item>
+            </el-form>
+            <template #footer>
+                <el-button @click="manualRefundVisible = false">取消</el-button>
+                <el-button type="primary" @click="submitManualRefund">确认退款</el-button>
+            </template>
+        </el-dialog>
     </div>
 </template>
 
 <script lang="ts" setup name="weddingServiceOrderIndex">
-import { detailServiceOrder, getServiceOrderLists, offlineVoucherAuditServiceOrder } from '@/api/wedding'
+import { detailServiceOrder, getServiceOrderLists, manualRefundServiceOrder, offlineVoucherAuditServiceOrder } from '@/api/wedding'
 import { usePaging } from '@/hooks/usePaging'
 import feedback from '@/utils/feedback'
 import { computed, reactive, ref } from 'vue'
@@ -192,7 +248,13 @@ const statusOptions = [
     { label: '待支付', value: 20 },
     { label: '待线下凭证审核', value: 21 },
     { label: '待履约', value: 30 },
-    { label: '已取消', value: 70 }
+    { label: '履约中', value: 40 },
+    { label: '待评价', value: 50 },
+    { label: '评价待审核', value: 51 },
+    { label: '已完成', value: 60 },
+    { label: '已取消', value: 70 },
+    { label: '退款中', value: 80 },
+    { label: '已退款', value: 81 }
 ]
 
 const queryParams = reactive({
@@ -213,7 +275,8 @@ const detailVisible = ref(false)
 const detailData = reactive<any>({
     order: {},
     snapshot: {},
-    offline_voucher: {}
+    offline_voucher: {},
+    latest_refund: {}
 })
 const templatePages = computed(() => detailData.snapshot?.template_snapshot?.pages || [])
 
@@ -224,10 +287,28 @@ const auditForm = reactive({
     audit_remark: ''
 })
 
+const manualRefundVisible = ref(false)
+const manualRefundForm = reactive({
+    order_id: 0,
+    order_sn: '',
+    apply_reason: '',
+    handle_remark: ''
+})
+
 const applyDateRange = () => {
     queryParams.service_date_start = dateRange.value?.[0] || ''
     queryParams.service_date_end = dateRange.value?.[1] || ''
     resetPage()
+}
+
+const formatTime = (value: number | string) => {
+    if (!value || Number(value) <= 0) {
+        return '-'
+    }
+    const time = new Date(Number(value) * 1000)
+    return `${time.getFullYear()}-${String(time.getMonth() + 1).padStart(2, '0')}-${String(time.getDate()).padStart(2, '0')} ${String(
+        time.getHours()
+    ).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}:${String(time.getSeconds()).padStart(2, '0')}`
 }
 
 const resetAll = () => {
@@ -247,7 +328,8 @@ const openDetail = async (id: number) => {
     Object.assign(detailData, {
         order: data?.order || {},
         snapshot: data?.snapshot || {},
-        offline_voucher: data?.offline_voucher || {}
+        offline_voucher: data?.offline_voucher || {},
+        latest_refund: data?.latest_refund || {}
     })
     detailVisible.value = true
 }
@@ -275,6 +357,36 @@ const submitAudit = async () => {
     })
     auditVisible.value = false
     detailVisible.value = false
+    getLists()
+}
+
+const canManualRefund = (row: any) => {
+    return Number(row.pay_status) === 1 && [30, 40, 50, 51, 60].includes(Number(row.order_status))
+}
+
+const openManualRefund = (row: any) => {
+    manualRefundForm.order_id = Number(row.id)
+    manualRefundForm.order_sn = row.sn || ''
+    manualRefundForm.apply_reason = ''
+    manualRefundForm.handle_remark = ''
+    manualRefundVisible.value = true
+}
+
+const submitManualRefund = async () => {
+    if (!manualRefundForm.order_id) {
+        return
+    }
+    if (!manualRefundForm.apply_reason.trim()) {
+        feedback.msgError('请填写退款原因')
+        return
+    }
+    await manualRefundServiceOrder({
+        order_id: manualRefundForm.order_id,
+        apply_reason: manualRefundForm.apply_reason,
+        handle_remark: manualRefundForm.handle_remark
+    })
+    feedback.msgSuccess('后台退款已发起')
+    manualRefundVisible.value = false
     getLists()
 }
 

@@ -240,6 +240,22 @@ export function auditServiceOrderReview(params: any) {
     return request.post({ url: '/wedding.service_order_review/audit', params })
 }
 
+export function getServiceOrderRefundLists(params?: any) {
+    return request.get({ url: '/wedding.service_order_refund/lists', params })
+}
+
+export function detailServiceOrderRefund(params: any) {
+    return request.get({ url: '/wedding.service_order_refund/detail', params })
+}
+
+export function handleServiceOrderRefund(params: any) {
+    return request.post({ url: '/wedding.service_order_refund/handle', params })
+}
+
+export function manualRefundServiceOrder(params: any) {
+    return request.post({ url: '/wedding.service_order_refund/manualRefund', params })
+}
+
 export function getWeddingDashboardOverview() {
     return request.get({ url: '/wedding.wedding_dashboard/overview' })
 }

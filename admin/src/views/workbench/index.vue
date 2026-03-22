@@ -1,5 +1,21 @@
 <template>
-    <div class="workbench">
+    <div class="workbench-page">
+        <el-card class="hero-card !border-none mb-4" shadow="never">
+            <div class="hero-layout">
+                <div>
+                    <div class="hero-eyebrow">Wedding Operations</div>
+                    <div class="hero-title">婚庆预约业务工作台</div>
+                    <div class="hero-desc">
+                        工作台已切换为婚庆业务真实口径，统一展示订单、支付、改期与评价审核待办。
+                    </div>
+                </div>
+                <div class="hero-badges">
+                    <span class="hero-badge">更新时间 {{ weddingOverview.time || '--' }}</span>
+                    <span class="hero-badge hero-badge--gold">V1 收口执行中</span>
+                </div>
+            </div>
+        </el-card>
+
         <div class="lg:flex">
             <el-card class="!border-none mb-4 lg:mr-4 lg:w-[350px]" shadow="never">
                 <template #header>
@@ -8,11 +24,11 @@
                 <div>
                     <div class="flex leading-9">
                         <div class="w-20">平台名称</div>
-                        <span> {{ workbenchData.version.name }}</span>
+                        <span>{{ workbenchData.version.name }}</span>
                     </div>
                     <div class="flex leading-9">
                         <div class="w-20">当前版本</div>
-                        <span> {{ workbenchData.version.version }}</span>
+                        <span>{{ workbenchData.version.version }}</span>
                     </div>
                     <div class="flex leading-9">
                         <div class="w-20">获取渠道</div>
@@ -20,59 +36,68 @@
                             <a :href="workbenchData.version.channel.website" target="_blank">
                                 <el-button type="success" size="small">官网</el-button>
                             </a>
-                            <a
-                                class="ml-3"
-                                :href="workbenchData.version.channel.gitee"
-                                target="_blank"
-                            >
+                            <a class="ml-3" :href="workbenchData.version.channel.gitee" target="_blank">
                                 <el-button type="danger" size="small">Gitee</el-button>
                             </a>
                         </div>
                     </div>
                 </div>
             </el-card>
+
             <el-card class="!border-none mb-4 flex-1" shadow="never">
                 <template #header>
                     <div>
-                        <span class="card-title">今日数据</span>
+                        <span class="card-title">今日经营摘要</span>
                         <span class="text-tx-secondary text-xs ml-4">
-                            更新时间：{{ workbenchData.today.time }}
+                            更新时间：{{ weddingOverview.time || '--' }}
                         </span>
                     </div>
                 </template>
 
                 <div class="flex flex-wrap">
                     <div class="w-1/2 md:w-1/4">
-                        <div class="leading-10">销售额</div>
-                        <div class="text-6xl">{{ workbenchData.today.today_sales }}</div>
+                        <div class="leading-10">今日支付</div>
+                        <div class="text-6xl">{{ formatAmount(weddingOverview.today.today_paid_amount) }}</div>
                         <div class="text-tx-secondary text-xs">
-                            总：{{ workbenchData.today.total_sales }}
+                            累计：{{ formatAmount(weddingOverview.today.total_paid_amount) }}
                         </div>
                     </div>
                     <div class="w-1/2 md:w-1/4">
-                        <div class="leading-10">成交订单</div>
-                        <div class="text-6xl">{{ workbenchData.today.order_num }}</div>
+                        <div class="leading-10">今日订单</div>
+                        <div class="text-6xl">{{ weddingOverview.today.today_order_count || 0 }}</div>
                         <div class="text-tx-secondary text-xs">
-                            总：{{ workbenchData.today.order_sum }}
+                            累计：{{ weddingOverview.today.total_order_count || 0 }}
                         </div>
                     </div>
                     <div class="w-1/2 md:w-1/4">
-                        <div class="leading-10">新增用户</div>
-                        <div class="text-6xl">{{ workbenchData.today.today_new_user }}</div>
-                        <div class="text-tx-secondary text-xs">
-                            总：{{ workbenchData.today.total_new_user }}
-                        </div>
+                        <div class="leading-10">待服务人员确认</div>
+                        <div class="text-6xl">{{ weddingOverview.todo.wait_provider_confirm_count || 0 }}</div>
+                        <div class="text-tx-secondary text-xs">接单前订单仍处于锁档状态</div>
                     </div>
                     <div class="w-1/2 md:w-1/4">
-                        <div class="leading-10">新增访问量</div>
-                        <div class="text-6xl">{{ workbenchData.today.today_visitor }}</div>
-                        <div class="text-tx-secondary text-xs">
-                            总：{{ workbenchData.today.total_visitor }}
-                        </div>
+                        <div class="leading-10">待线下凭证审核</div>
+                        <div class="text-6xl">{{ weddingOverview.todo.wait_offline_voucher_audit_count || 0 }}</div>
+                        <div class="text-tx-secondary text-xs">等待后台人工核验支付凭证</div>
                     </div>
                 </div>
             </el-card>
         </div>
+
+        <div class="mb-4">
+            <el-card class="!border-none" shadow="never">
+                <template #header>
+                    <span class="card-title">关键待办</span>
+                </template>
+                <div class="todo-grid">
+                    <div v-for="item in todoCards" :key="item.title" class="todo-card">
+                        <div class="todo-card__title">{{ item.title }}</div>
+                        <div class="todo-card__value">{{ item.value }}</div>
+                        <div class="todo-card__desc">{{ item.desc }}</div>
+                    </div>
+                </div>
+            </el-card>
+        </div>
+
         <div class="function mb-4">
             <el-card class="flex-1 !border-none" shadow="never">
                 <template #header>
@@ -81,10 +106,10 @@
                 <div class="flex flex-wrap">
                     <div
                         v-for="item in workbenchData.menu"
+                        :key="item.url"
                         class="md:w-[12.5%] w-1/4 flex flex-col items-center"
-                        :key="item"
                     >
-                        <router-link :to="item.url" class="mb-3 flex flex-col items-center">
+                        <router-link :to="item.url" class="mb-3 flex flex-col items-center quick-link">
                             <image-contain width="40px" height="40px" :src="item?.image" />
                             <div class="mt-2">{{ item.name }}</div>
                         </router-link>
@@ -92,10 +117,11 @@
                 </div>
             </el-card>
         </div>
+
         <div class="lg:flex gap-4">
             <el-card class="!border-none mb-4 lg:mb-0 w-full lg:w-2/3" shadow="never">
                 <template #header>
-                    <span>访问量趋势图</span>
+                    <span>近 15 日订单趋势</span>
                 </template>
                 <div>
                     <v-charts
@@ -106,9 +132,10 @@
                     />
                 </div>
             </el-card>
+
             <el-card class="!border-none w-full lg:w-1/3" shadow="never">
                 <template #header>
-                    <span>销售额趋势图</span>
+                    <span>近 7 日支付趋势</span>
                 </template>
                 <div>
                     <v-charts
@@ -127,6 +154,7 @@
 import vCharts from 'vue-echarts'
 
 import { getWorkbench } from '@/api/app'
+import { getWeddingDashboardOverview } from '@/api/wedding'
 import useSettingStore from '@/stores/modules/setting'
 import { useComponentRef } from '@/utils/getExposeType'
 import { calcColor } from '@/utils/util'
@@ -135,30 +163,19 @@ const settingStore = useSettingStore()
 const saleChart = useComponentRef(vCharts)
 const visitorChart = useComponentRef(vCharts)
 
-watch(
-    () => settingStore.theme,
-    () => {
-        updateColor()
-    }
-)
+const formatAmount = (value: number | string | undefined) => `￥${Number(value || 0).toFixed(2)}`
 
-// 表单数据
 const workbenchData: any = reactive({
     version: {
-        version: '', // 版本号
-        website: '', // 官网
+        version: '',
+        website: '',
         based: '',
         channel: {
             gitee: '',
             website: ''
         }
     },
-    support: [],
-    today: {}, // 今日数据
-    menu: [], // 常用功能
-    visitor: [], // 访问量
-    article: [], // 文章阅读量
-
+    menu: [],
     visitorOption: {
         xAxis: {
             type: 'category',
@@ -168,14 +185,14 @@ const workbenchData: any = reactive({
             type: 'value'
         },
         legend: {
-            data: ['访问量']
+            data: ['订单数']
         },
         tooltip: {
             trigger: 'axis'
         },
         series: [
             {
-                name: '访问量',
+                name: '订单数',
                 data: [],
                 type: 'line',
                 smooth: true,
@@ -202,12 +219,11 @@ const workbenchData: any = reactive({
                             }
                         ]
                     },
-                    opacity: 0.1
+                    opacity: 0.12
                 }
             }
         ]
     },
-
     saleOption: {
         xAxis: {
             type: 'category',
@@ -215,14 +231,14 @@ const workbenchData: any = reactive({
         },
         yAxis: {
             type: 'value',
-            name: '单位（万）'
+            name: '单位（元）'
         },
         tooltip: {
             trigger: 'axis'
         },
         series: [
             {
-                name: '销售量',
+                name: '支付金额',
                 data: [],
                 type: 'bar',
                 showBackground: true,
@@ -256,59 +272,77 @@ const workbenchData: any = reactive({
     }
 })
 
-// 获取工作台主页数据
-const getData = () => {
-    getWorkbench()
-        .then((res: any) => {
-            workbenchData.version = res.version
-            workbenchData.today = res.today
-            workbenchData.menu = res.menu
-            workbenchData.visitor = res.visitor
-            workbenchData.support = res.support
+const weddingOverview = reactive<any>({
+    time: '',
+    today: {},
+    todo: {},
+    order_trend: {
+        labels: [],
+        values: []
+    },
+    payment_trend: {
+        labels: [],
+        values: []
+    }
+})
 
-            // 清空echarts 数据
+const todoCards = computed(() => [
+    {
+        title: '待改期处理',
+        value: weddingOverview.todo.wait_reschedule_count || 0,
+        desc: '用户已提交改期申请，等待服务人员或平台处理'
+    },
+    {
+        title: '待评价审核',
+        value: weddingOverview.todo.wait_review_audit_count || 0,
+        desc: '未审核通过前不会公开展示，也不会纳入经营统计'
+    },
+    {
+        title: '待服务人员确认',
+        value: weddingOverview.todo.wait_provider_confirm_count || 0,
+        desc: '订单已锁档，等待服务人员确认是否接单'
+    },
+    {
+        title: '待凭证审核',
+        value: weddingOverview.todo.wait_offline_voucher_audit_count || 0,
+        desc: '线下支付凭证等待后台人工核验'
+    }
+])
+
+watch(
+    () => settingStore.theme,
+    () => {
+        updateColor()
+    }
+)
+
+const getData = () => {
+    Promise.all([getWorkbench(), getWeddingDashboardOverview()])
+        .then(([workbench, overview]: any) => {
+            workbenchData.version = workbench.version
+            workbenchData.menu = workbench.menu
+
+            Object.assign(weddingOverview, overview || {})
+
             workbenchData.visitorOption.xAxis.data = []
             workbenchData.visitorOption.series[0].data = []
             workbenchData.saleOption.xAxis.data = []
             workbenchData.saleOption.series[0].data = []
 
-            // 写入从后台拿来的数据
-            res.visitor.date.reverse().forEach((item: any) => {
+            ;(overview?.order_trend?.labels || []).forEach((item: any) => {
                 workbenchData.visitorOption.xAxis.data.push(item)
             })
-            res.visitor.list[0].data.forEach((item: any) => {
+            ;(overview?.order_trend?.values || []).forEach((item: any) => {
                 workbenchData.visitorOption.series[0].data.push(item)
             })
-            res.sale.date.reverse().forEach((item: any) => {
+            ;(overview?.payment_trend?.labels || []).forEach((item: any) => {
                 workbenchData.saleOption.xAxis.data.push(item)
             })
-            res.sale.list[0].data.forEach((item: any) => {
-                if (item <= 50) {
-                    item = {
-                        value: item,
-                        itemStyle: {
-                            color: {
-                                type: 'linear',
-                                x: 0,
-                                y: 0,
-                                x2: 0,
-                                y2: 1,
-                                colorStops: [
-                                    {
-                                        offset: 0,
-                                        color: calcColor('#ff8729', 0.7)
-                                    },
-                                    {
-                                        offset: 1,
-                                        color: '#ff8729'
-                                    }
-                                ]
-                            }
-                        }
-                    }
-                }
-                workbenchData.saleOption.series[0].data.push(item)
+            ;(overview?.payment_trend?.values || []).forEach((item: any) => {
+                workbenchData.saleOption.series[0].data.push(Number(item || 0))
             })
+
+            updateColor()
         })
         .catch((err: any) => {
             console.log('err', err)
@@ -350,4 +384,130 @@ onMounted(() => {
 })
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.workbench-page {
+    background:
+        radial-gradient(circle at top left, rgba(219, 39, 119, 0.08), transparent 24%),
+        radial-gradient(circle at right bottom, rgba(202, 138, 4, 0.10), transparent 28%),
+        linear-gradient(180deg, #fff8fb 0%, #fcfaf7 46%, #f8f4ef 100%);
+    min-height: 100%;
+}
+
+.hero-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 249, 251, 0.95));
+}
+
+.hero-layout {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.hero-eyebrow {
+    color: #9d174d;
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.hero-title {
+    margin-top: 10px;
+    color: #1f2937;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.hero-desc {
+    margin-top: 14px;
+    color: #6b7280;
+    font-size: 14px;
+    line-height: 1.8;
+    max-width: 720px;
+}
+
+.hero-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.hero-badge {
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: rgba(219, 39, 119, 0.08);
+    color: #9d174d;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.hero-badge--gold {
+    background: rgba(202, 138, 4, 0.12);
+    color: #a16207;
+}
+
+.todo-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.todo-card {
+    padding: 18px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #fffafb, #fffdfa);
+    border: 1px solid rgba(219, 39, 119, 0.10);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    cursor: pointer;
+}
+
+.todo-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(31, 41, 55, 0.08);
+    border-color: rgba(219, 39, 119, 0.18);
+}
+
+.todo-card__title {
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.todo-card__value {
+    margin-top: 10px;
+    color: #111827;
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.todo-card__desc {
+    margin-top: 10px;
+    color: #6b7280;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.quick-link {
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    cursor: pointer;
+}
+
+.quick-link:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+@media (max-width: 1279px) {
+    .todo-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 767px) {
+    .todo-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+</style>

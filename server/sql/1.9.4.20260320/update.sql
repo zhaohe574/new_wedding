@@ -294,11 +294,44 @@ CREATE TABLE IF NOT EXISTS `la_service_order_offline_voucher` (
   INDEX `idx_delete_time` (`delete_time`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='婚庆线下支付凭证表';
 
+CREATE TABLE IF NOT EXISTS `la_service_order_refund` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `order_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '订单ID',
+  `user_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '用户ID',
+  `provider_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '服务人员ID',
+  `apply_source` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'user' COMMENT '申请来源 user/admin',
+  `origin_order_status` tinyint(3) UNSIGNED NOT NULL DEFAULT 0 COMMENT '申请时订单状态',
+  `refund_amount` decimal(10,2) NOT NULL DEFAULT 0.00 COMMENT '退款金额',
+  `apply_reason` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '申请原因',
+  `status` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '退款状态 0-待处理 1-已驳回 2-退款中 3-已退款 4-退款失败',
+  `handle_by` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '处理人',
+  `handle_remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '处理备注',
+  `handle_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '处理时间',
+  `refund_record_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '关联退款记录ID',
+  `create_time` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '创建时间',
+  `update_time` int(10) UNSIGNED DEFAULT NULL COMMENT '更新时间',
+  `delete_time` int(10) DEFAULT NULL COMMENT '删除时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_order_status` (`order_id`, `status`) USING BTREE,
+  INDEX `idx_user_status` (`user_id`, `status`) USING BTREE,
+  INDEX `idx_provider_status` (`provider_id`, `status`) USING BTREE,
+  INDEX `idx_refund_record_id` (`refund_record_id`) USING BTREE,
+  INDEX `idx_delete_time` (`delete_time`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='婚庆服务订单退款申请表';
+
 INSERT INTO `la_config` (`type`, `name`, `value`, `create_time`, `update_time`)
-SELECT 'service_business', 'trade', '{"online_pay_enabled":1,"offline_voucher_enabled":1,"provider_confirm_timeout_minutes":30,"pay_timeout_minutes":30}', 1773945600, 1773945600
+SELECT 'service_business', 'trade', '{"online_pay_enabled":1,"offline_voucher_enabled":1,"refund_apply_enabled":1,"provider_confirm_timeout_minutes":30,"pay_timeout_minutes":30}', 1773945600, 1773945600
 WHERE NOT EXISTS (
     SELECT 1 FROM `la_config` WHERE `type` = 'service_business' AND `name` = 'trade'
 );
+
+UPDATE `la_config`
+SET `value` = CASE
+    WHEN JSON_VALID(`value`) AND JSON_EXTRACT(`value`, '$.refund_apply_enabled') IS NOT NULL THEN `value`
+    WHEN JSON_VALID(`value`) THEN JSON_SET(`value`, '$.refund_apply_enabled', 1)
+    ELSE '{"online_pay_enabled":1,"offline_voucher_enabled":1,"refund_apply_enabled":1,"provider_confirm_timeout_minutes":30,"pay_timeout_minutes":30}'
+END
+WHERE `type` = 'service_business' AND `name` = 'trade';
 
 INSERT INTO `la_config` (`type`, `name`, `value`, `create_time`, `update_time`)
 SELECT 'service_business', 'review', '{"provider_profile_review_mode":"admin","post_review_mode":"admin","comment_review_mode":"provider_then_admin","order_review_mode":"admin"}', 1773945600, 1773945600
@@ -433,6 +466,7 @@ REPLACE INTO `la_system_menu` (`id`, `pid`, `type`, `name`, `icon`, `sort`, `per
 (235, 234, 'A', '订单列表', '', 100, 'wedding.service_order/lists', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
 (236, 234, 'A', '订单详情', '', 90, 'wedding.service_order/detail', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
 (237, 234, 'A', '凭证审核', '', 80, 'wedding.service_order/offlineVoucherAudit', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
+(242, 234, 'A', '后台退款', '', 70, 'wedding.service_order_refund/manualRefund', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
 (238, 179, 'C', '线下凭证审核', '', 34, 'wedding.service_order/lists', 'service-order-voucher', 'wedding/service-order-voucher/index', '', '', 0, 1, 0, 1773945600, 1773945600),
 (239, 238, 'A', '凭证列表', '', 100, 'wedding.service_order/lists', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
 (240, 238, 'A', '凭证详情', '', 90, 'wedding.service_order/detail', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
@@ -611,7 +645,30 @@ SELECT 213, '婚庆评价审核结果', '订单评价审核完成后触发', 1, 
        '1', 1773945600
 WHERE NOT EXISTS (SELECT 1 FROM `la_notice_setting` WHERE `scene_id` = 213);
 
+INSERT INTO `la_notice_setting` (`scene_id`, `scene_name`, `scene_desc`, `recipient`, `type`, `system_notice`, `sms_notice`, `oa_notice`, `mnp_notice`, `support`, `update_time`)
+SELECT 214, '婚庆退款申请已提交', '婚庆订单退款申请提交后触发', 1, 1,
+       '{\"type\":\"system\",\"title\":\"退款申请已提交\",\"content\":\"订单 {order_sn} 的退款申请已提交，退款金额 ￥{refund_amount}，请留意后续处理结果。\",\"status\":\"1\",\"is_show\":\"1\",\"tips\":[\"可选变量 订单号:order_sn\",\"可选变量 退款金额:refund_amount\"]}',
+       '{\"type\":\"sms\",\"template_id\":\"\",\"content\":\"\",\"status\":\"0\",\"is_show\":\"0\"}',
+       '{\"type\":\"oa\",\"template_id\":\"\",\"template_sn\":\"\",\"name\":\"\",\"first\":\"\",\"remark\":\"\",\"tpl\":[],\"status\":\"0\",\"is_show\":\"0\"}',
+       '{\"type\":\"mnp\",\"template_id\":\"\",\"template_sn\":\"\",\"name\":\"\",\"tpl\":[],\"status\":\"0\",\"is_show\":\"0\"}',
+       '1', 1773945600
+WHERE NOT EXISTS (SELECT 1 FROM `la_notice_setting` WHERE `scene_id` = 214);
+
+INSERT INTO `la_notice_setting` (`scene_id`, `scene_name`, `scene_desc`, `recipient`, `type`, `system_notice`, `sms_notice`, `oa_notice`, `mnp_notice`, `support`, `update_time`)
+SELECT 215, '婚庆退款处理结果', '婚庆订单退款处理完成后触发', 1, 1,
+       '{\"type\":\"system\",\"title\":\"退款处理结果已更新\",\"content\":\"订单 {order_sn} 的退款处理结果：{refund_result}。\",\"status\":\"1\",\"is_show\":\"1\",\"tips\":[\"可选变量 订单号:order_sn\",\"可选变量 退款结果:refund_result\"]}',
+       '{\"type\":\"sms\",\"template_id\":\"\",\"content\":\"\",\"status\":\"0\",\"is_show\":\"0\"}',
+       '{\"type\":\"oa\",\"template_id\":\"\",\"template_sn\":\"\",\"name\":\"\",\"first\":\"\",\"remark\":\"\",\"tpl\":[],\"status\":\"0\",\"is_show\":\"0\"}',
+       '{\"type\":\"mnp\",\"template_id\":\"\",\"template_sn\":\"\",\"name\":\"\",\"tpl\":[],\"status\":\"0\",\"is_show\":\"0\"}',
+       '1', 1773945600
+WHERE NOT EXISTS (SELECT 1 FROM `la_notice_setting` WHERE `scene_id` = 215);
+
 REPLACE INTO `la_system_menu` (`id`, `pid`, `type`, `name`, `icon`, `sort`, `perms`, `paths`, `component`, `selected`, `params`, `is_cache`, `is_show`, `is_disable`, `create_time`, `update_time`) VALUES
+(9110, 179, 'C', '退款管理', '', 31, 'wedding.service_order_refund/lists', 'service-order-refund', 'wedding/service-order-refund/index', '', '', 0, 1, 0, 1773945600, 1773945600),
+(9111, 9110, 'A', '退款列表', '', 100, 'wedding.service_order_refund/lists', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
+(9112, 9110, 'A', '退款详情', '', 90, 'wedding.service_order_refund/detail', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
+(9113, 9110, 'A', '退款处理', '', 80, 'wedding.service_order_refund/handle', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
+(9114, 9110, 'A', '后台退款', '', 70, 'wedding.service_order_refund/manualRefund', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
 (9101, 179, 'C', '改期管理', '', 33, 'wedding.service_order_change/lists', 'service-order-change', 'wedding/service-order-change/index', '', '', 0, 1, 0, 1773945600, 1773945600),
 (9102, 9101, 'A', '改期列表', '', 100, 'wedding.service_order_change/lists', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),
 (9103, 9101, 'A', '改期详情', '', 90, 'wedding.service_order_change/detail', '', '', '', '', 0, 1, 0, 1773945600, 1773945600),

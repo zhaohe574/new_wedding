@@ -6,13 +6,17 @@ namespace app\api\controller;
 
 use app\adminapi\logic\wedding\ServiceCategoryLogic;
 use app\adminapi\logic\wedding\ServiceTagLogic;
+use app\api\validate\WeddingProviderScheduleValidate;
 use app\api\validate\WeddingProfileValidate;
 use app\api\validate\WeddingOrderValidate;
 use app\api\validate\WeddingTradeValidate;
 use app\common\model\wedding\ServiceOpenCity;
+use app\common\service\ProviderScheduleService;
+use app\common\service\ServiceBusinessConfigService;
 use app\common\service\ServiceContentTemplateService;
 use app\common\service\ServiceRegionService;
 use app\common\service\ServiceOrderService;
+use app\common\service\WeddingWorkbenchStatService;
 use app\common\service\WeddingTradeService;
 use app\common\service\WeddingProfileService;
 use think\response\Json;
@@ -136,6 +140,17 @@ class WeddingController extends BaseApiController
         return $this->success('线下凭证提交成功', [], 1, 1);
     }
 
+    public function orderRefundApply(): Json
+    {
+        $params = (new WeddingOrderValidate())->post()->goCheck('refundApply');
+        ServiceOrderService::refundApplyByUser(
+            $this->userId,
+            (int)$params['order_id'],
+            trim((string)($params['apply_reason'] ?? ''))
+        );
+        return $this->success('退款申请已提交', [], 1, 1);
+    }
+
     public function orderRescheduleApply(): Json
     {
         $params = (new WeddingOrderValidate())->post()->goCheck('rescheduleApply');
@@ -159,6 +174,16 @@ class WeddingController extends BaseApiController
             $params['review_images'] ?? []
         );
         return $this->success('评价提交成功', [], 1, 1);
+    }
+
+    public function dashboardOverview(): Json
+    {
+        $ability = ServiceBusinessConfigService::getUserAbility($this->userId);
+        if (empty($ability['can_view_dashboard'])) {
+            return $this->fail('当前账号无经营驾驶舱查看权限');
+        }
+
+        return $this->data(WeddingWorkbenchStatService::getOverview());
     }
 
     public function providerOrderLists(): Json
@@ -226,5 +251,59 @@ class WeddingController extends BaseApiController
             trim((string)($params['audit_remark'] ?? ''))
         );
         return $this->success('评价审核成功', [], 1, 1);
+    }
+
+    public function providerScheduleMonth(): Json
+    {
+        $params = (new WeddingProviderScheduleValidate())->get()->goCheck('month');
+        $provider = $this->getCurrentProvider();
+        $data = ProviderScheduleService::getMonthCalendar(
+            (int)$provider['id'],
+            trim((string)($params['month'] ?? ''))
+        );
+
+        $data['provider'] = [
+            'provider_id' => (int)$provider['id'],
+            'name' => (string)($provider['name'] ?? ''),
+            'category_id' => (int)($provider['category_id'] ?? 0),
+        ];
+
+        return $this->data($data);
+    }
+
+    public function providerScheduleUpsert(): Json
+    {
+        $params = (new WeddingProviderScheduleValidate())->post()->goCheck('upsert');
+        $provider = $this->getCurrentProvider();
+        $data = ProviderScheduleService::saveProviderDates(
+            (int)$provider['id'],
+            $params['service_dates'] ?? [],
+            (string)$params['status'],
+            trim((string)($params['remark'] ?? ''))
+        );
+
+        return $this->success('档期保存成功', $data, 1, 1);
+    }
+
+    public function providerScheduleDelete(): Json
+    {
+        $params = (new WeddingProviderScheduleValidate())->post()->goCheck('delete');
+        $provider = $this->getCurrentProvider();
+        $data = ProviderScheduleService::deleteProviderDates(
+            (int)$provider['id'],
+            $params['service_dates'] ?? []
+        );
+
+        return $this->success('档期已恢复为可预约', $data, 1, 1);
+    }
+
+    private function getCurrentProvider(): array
+    {
+        $provider = ServiceOrderService::getProviderByUserId($this->userId);
+        if ($provider->isEmpty()) {
+            throw new \RuntimeException('当前账号未绑定可用服务人员');
+        }
+
+        return $provider->toArray();
     }
 }

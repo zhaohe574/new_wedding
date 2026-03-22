@@ -58,6 +58,8 @@ const statusTabs = [
     { label: '待支付', value: 20 },
     { label: '待凭证审核', value: 21 },
     { label: '待履约', value: 30 },
+    { label: '退款中', value: 80 },
+    { label: '已退款', value: 81 },
     { label: '已取消', value: 70 }
 ]
 
@@ -219,4 +221,3 @@ onShow(async () => {
     background: rgba(255, 255, 255, 0.8);
 }
 </style>
-

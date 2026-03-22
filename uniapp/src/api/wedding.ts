@@ -52,6 +52,10 @@ export function submitWeddingOfflineVoucher(data: Record<string, any>) {
     return request.post({ url: '/wedding/order/offlineVoucher', data }, { isAuth: true })
 }
 
+export function applyWeddingOrderRefund(data: Record<string, any>) {
+    return request.post({ url: '/wedding/order/refundApply', data }, { isAuth: true })
+}
+
 export function getProviderPendingOrderLists(data: Record<string, any>) {
     return request.get({ url: '/wedding/provider/order/pendingLists', data }, { isAuth: true })
 }
@@ -62,6 +66,10 @@ export function applyWeddingOrderReschedule(data: Record<string, any>) {
 
 export function submitWeddingOrderReview(data: Record<string, any>) {
     return request.post({ url: '/wedding/order/reviewSubmit', data }, { isAuth: true })
+}
+
+export function getWeddingDashboardOverview() {
+    return request.get({ url: '/wedding/dashboard/overview' }, { isAuth: true })
 }
 
 export function getProviderOrderLists(data: Record<string, any>) {
@@ -90,4 +98,16 @@ export function completeProviderOrderService(data: Record<string, any>) {
 
 export function auditProviderOrderReview(data: Record<string, any>) {
     return request.post({ url: '/wedding/provider/order/reviewAudit', data }, { isAuth: true })
+}
+
+export function getProviderScheduleMonth(data: Record<string, any>) {
+    return request.get({ url: '/wedding/provider/schedule/month', data }, { isAuth: true })
+}
+
+export function upsertProviderSchedule(data: Record<string, any>) {
+    return request.post({ url: '/wedding/provider/schedule/upsert', data }, { isAuth: true })
+}
+
+export function deleteProviderScheduleDates(data: Record<string, any>) {
+    return request.post({ url: '/wedding/provider/schedule/delete', data }, { isAuth: true })
 }

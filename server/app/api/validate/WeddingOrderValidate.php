@@ -85,6 +85,7 @@ class WeddingOrderValidate extends BaseValidate
         'detail' => ['order_id'],
         'cancel' => ['order_id', 'cancel_reason'],
         'offlineVoucher' => ['order_id', 'voucher_images', 'voucher_remark'],
+        'refundApply' => ['order_id', 'apply_reason'],
         'providerPendingLists' => ['page_no', 'page_size'],
         'providerOrderLists' => ['view_tab', 'order_status', 'page_no', 'page_size'],
         'providerOrderDetail' => ['order_id'],

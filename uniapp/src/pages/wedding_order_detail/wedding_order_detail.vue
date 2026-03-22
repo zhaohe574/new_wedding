@@ -74,6 +74,31 @@
             </view>
 
             <view class="panel-card mt-[24rpx]">
+                <view class="panel-card__title">退款进度</view>
+                <view v-if="!detail.latest_refund?.id" class="panel-card__desc">当前暂无退款记录。</view>
+                <template v-else>
+                    <view class="detail-list">
+                        <view class="detail-row">
+                            <view class="detail-row__label">处理状态</view>
+                            <view class="detail-row__value">{{ detail.latest_refund.status_desc || '-' }}</view>
+                        </view>
+                        <view class="detail-row">
+                            <view class="detail-row__label">退款金额</view>
+                            <view class="detail-row__value">￥{{ Number(detail.latest_refund.refund_amount || 0).toFixed(2) }}</view>
+                        </view>
+                        <view class="detail-row">
+                            <view class="detail-row__label">申请原因</view>
+                            <view class="detail-row__value">{{ detail.latest_refund.apply_reason || '-' }}</view>
+                        </view>
+                        <view class="detail-row">
+                            <view class="detail-row__label">处理备注</view>
+                            <view class="detail-row__value">{{ detail.latest_refund.handle_remark || '-' }}</view>
+                        </view>
+                    </view>
+                </template>
+            </view>
+
+            <view class="panel-card mt-[24rpx]">
                 <view class="panel-card__title">订单评价</view>
                 <view v-if="!detail.review?.id" class="panel-card__desc">当前暂未提交评价。</view>
                 <template v-else>
@@ -157,6 +182,7 @@
                     提交线下凭证
                 </button>
                 <button v-if="detail.action.can_apply_reschedule" class="action-btn" @click="openReschedulePopup">申请改期</button>
+                <button v-if="detail.action.can_apply_refund" class="action-btn" @click="openRefundPopup">申请退款</button>
                 <button v-if="detail.action.can_review" class="action-btn" @click="goReviewPage">去评价</button>
                 <button class="ghost-btn" @click="goOrderList">返回订单列表</button>
             </view>
@@ -204,6 +230,20 @@
             </view>
         </u-popup>
 
+        <u-popup v-model="refundPopupVisible" mode="bottom" border-radius="18" safe-area-inset-bottom>
+            <view class="popup-panel">
+                <view class="popup-panel__title">申请退款</view>
+                <view class="popup-panel__desc">退款金额将按当前订单实付金额整单退回，请填写退款原因。</view>
+                <textarea
+                    v-model="refundForm.apply_reason"
+                    class="popup-panel__textarea"
+                    maxlength="500"
+                    placeholder="请填写退款原因"
+                />
+                <button class="action-btn" :loading="refundSubmitting" @click="handleSubmitRefund">确认提交</button>
+            </view>
+        </u-popup>
+
         <payment
             v-model:show="payState.showPay"
             v-model:show-check="payState.showCheck"
@@ -219,6 +259,7 @@
 <script setup lang="ts">
 import { uploadImage } from '@/api/app'
 import {
+    applyWeddingOrderRefund,
     applyWeddingOrderReschedule,
     cancelWeddingOrder,
     getWeddingOrderDetail,
@@ -232,14 +273,17 @@ const userStore = useUserStore()
 const loading = ref(false)
 const voucherSubmitting = ref(false)
 const rescheduleSubmitting = ref(false)
+const refundSubmitting = ref(false)
 const orderId = ref(0)
 const voucherPopupVisible = ref(false)
 const reschedulePopupVisible = ref(false)
+const refundPopupVisible = ref(false)
 const detail = reactive<any>({
     order: {},
     snapshot: {},
     offline_voucher: {},
     latest_change: {},
+    latest_refund: {},
     review: {},
     action: {},
     pay_from: 'service_order'
@@ -250,6 +294,9 @@ const voucherForm = reactive({
 })
 const rescheduleForm = reactive({
     new_service_date: '',
+    apply_reason: ''
+})
+const refundForm = reactive({
     apply_reason: ''
 })
 
@@ -340,6 +387,11 @@ const openReschedulePopup = () => {
     reschedulePopupVisible.value = true
 }
 
+const openRefundPopup = () => {
+    refundForm.apply_reason = ''
+    refundPopupVisible.value = true
+}
+
 const handleRescheduleDateChange = (event: any) => {
     rescheduleForm.new_service_date = event?.detail?.value || ''
 }
@@ -364,6 +416,24 @@ const handleSubmitReschedule = async () => {
         await loadDetail()
     } finally {
         rescheduleSubmitting.value = false
+    }
+}
+
+const handleSubmitRefund = async () => {
+    if (!refundForm.apply_reason.trim()) {
+        uni.showToast({ title: '请填写退款原因', icon: 'none' })
+        return
+    }
+    refundSubmitting.value = true
+    try {
+        await applyWeddingOrderRefund({
+            order_id: orderId.value,
+            apply_reason: refundForm.apply_reason
+        })
+        refundPopupVisible.value = false
+        await loadDetail()
+    } finally {
+        refundSubmitting.value = false
     }
 }
 
